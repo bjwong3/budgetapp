@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import DataDisplay from './DataDisplay';
+import Summary from './Summary';
 
 const initialData = {
   income: 0,
-  expense: []
+  expense: {}
 };
 
 function App() {
   const [data, setData] = useState(initialData);
 
-  const addToArray = (key, value) => {
+  const incomeKey = "income";
+  const expenseKey = "expense";
+
+  const addToExpenseMap = (key, value) => {
     setData(prevData => {
       const newData = { ...prevData };
-      if (Array.isArray(newData[key])) {
-        newData[key] = [...newData[key], value];
-      } else {
-        alert(`The value of "${key}" is not an array.`);
-      }
+      newData[expenseKey][key] = value;
       return newData;
     });
   };
@@ -28,11 +28,18 @@ function App() {
     }));
   };
 
+  const removeKey = (key) => {
+    const newData = { ...data };
+    delete newData[expenseKey][key];
+    setData(newData);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Welcome to My App</h1>
-        <DataDisplay data={data} updateData={updateData}  addToArray={addToArray}/>
+        <h1>Budget App</h1>
+        <Summary data={data} updateData={updateData} incomeKey={incomeKey} expenseKey={expenseKey}/>
+        <DataDisplay data={data} updateData={updateData}  addToExpenseMap={addToExpenseMap} removeKey={removeKey} incomeKey={incomeKey} expenseKey={expenseKey}/>
       </header>
     </div>
   );
