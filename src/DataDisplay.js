@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import ExpenseTable from './ExpenseTable';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, expenseKey}) => {
+const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, monthlyExpenseKey, addExpenseKey}) => {
   const [incomeValue, setIncomeValue] = useState('');
   const [expenseValue, setExpenseValue] = useState('');
   const [expenseName, setExpenseName] = useState('');
+  const [expenseType, setExpenseType] = useState('');
   const [editingKey, setEditingKey] = useState(null);
   const [editKey, setEditKey] = useState('');
   const [editValue, setEditValue] = useState('');
@@ -29,10 +31,11 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, 
   };
 
   const addToExpense = () => {
-    if (expenseName !== '' && expenseValue !== '' && expenseValue !== undefined && !isNaN(expenseValue)) {
-      addToExpenseMap(expenseName, expenseValue);
+    if (expenseName !== '' && expenseValue !== '' && expenseType !== '' && expenseValue !== undefined && !isNaN(expenseValue)) {
+      addToExpenseMap(expenseName, expenseValue, expenseType);
       setExpenseName('');
       setExpenseValue('');
+      setExpenseType('');
     }
   };
 
@@ -46,6 +49,10 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, 
     }
   };
 
+  const handleExpenseType = (event) => {
+    setExpenseType(event.target.value);
+  };
+
   const handleEditClick = (key, value) => {
     setEditingKey(key);
     setEditKey(key);
@@ -53,19 +60,15 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, 
     setEditValue(JSON.stringify(value));
   };
 
-  const handleSaveEdit = () => {
-    if (editKey && editValue !== '') {
+  const handleSaveEdit = (key, value, type) => {
+    if (key && value !== '') {
       let parsedValue;
       try {
-        parsedValue = JSON.parse(editValue);
+        parsedValue = JSON.parse(value);
       } catch (e) {
-        parsedValue = editValue;
+        parsedValue = value;
       }
-      addToExpenseMap(editKey, parsedValue);
-      if (editKey !== editingKey) handleRemoveKey(editingKey);
-      setEditingKey(null);
-      setEditKey('');
-      setEditValue('');
+      addToExpenseMap(key, parsedValue, type);
     }
   };
 
@@ -75,8 +78,8 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, 
     setEditValue(originalValue);
   };
 
-  const handleRemoveKey = (key) => {
-    removeKey(key);
+  const handleRemoveKey = (key, type) => {
+    removeKey(key, type);
   };
 
   const renderTable = (map) => {
@@ -176,17 +179,23 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, 
             onChange={handleExpenseValue}
           />
         </div>
+        <div className="col">
+          <select
+            type="text"
+            className="form-select"
+            placeholder="Value"
+            value={expenseType}
+            onChange={handleExpenseType}
+          >
+            <option value="" disabled>Select an expense type</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Additional">One-time</option>
+          </select>
+        </div>
         <div className="col-auto">
         <button className="btn btn-primary" onClick={addToExpense}>Add to Expenses</button>
         </div>
       </div>
-
-      {data[expenseKey].size !== 0 && (
-        <div>
-          <h2>List of Expenses</h2>
-          {renderTable(data[expenseKey])}
-        </div>
-      )}
     </div>
   );
 };

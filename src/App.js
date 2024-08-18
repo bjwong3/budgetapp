@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
 import DataDisplay from './DataDisplay';
 import Summary from './Summary';
+import ExpenseTable from './ExpenseTable';
 
 const initialData = {
   income: 0,
-  expense: {}
+  monthlyExpense: {},
+  addExpense: {}
 };
 
 function App() {
   const [data, setData] = useState(initialData);
 
   const incomeKey = "income";
-  const expenseKey = "expense";
+  const monthlyExpenseKey = "monthlyExpense";
+  const addExpenseKey = "addExpense";
 
-  const addToExpenseMap = (key, value) => {
+  const addToExpenseMap = (key, value, type) => {
     setData(prevData => {
       const newData = { ...prevData };
-      newData[expenseKey][key] = value;
+      if(type == 'Monthly') newData[monthlyExpenseKey][key] = value;
+      else if(type == 'Additional') newData[addExpenseKey][key] = value;
       return newData;
     });
   };
@@ -28,9 +32,10 @@ function App() {
     }));
   };
 
-  const removeKey = (key) => {
+  const removeKey = (key, type) => {
     const newData = { ...data };
-    delete newData[expenseKey][key];
+    if(type == 'Monthly') delete newData[monthlyExpenseKey][key];
+    else if(type == 'Additional') delete newData[addExpenseKey][key];
     setData(newData);
   };
 
@@ -38,8 +43,18 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Budget App</h1>
-        <Summary data={data} updateData={updateData} incomeKey={incomeKey} expenseKey={expenseKey}/>
-        <DataDisplay data={data} updateData={updateData}  addToExpenseMap={addToExpenseMap} removeKey={removeKey} incomeKey={incomeKey} expenseKey={expenseKey}/>
+        <Summary data={data} updateData={updateData} incomeKey={incomeKey} monthlyExpenseKey={monthlyExpenseKey} addExpenseKey={addExpenseKey}/>
+        <DataDisplay data={data} updateData={updateData}  addToExpenseMap={addToExpenseMap} removeKey={removeKey} incomeKey={incomeKey} monthlyExpenseKey={monthlyExpenseKey} addExpenseKey={addExpenseKey}/>
+        {data[monthlyExpenseKey].size !== 0 && data[addExpenseKey].size !== 0 && (
+        <div>
+          <ExpenseTable
+            monthlyExpense={data[monthlyExpenseKey]}
+            addExpense={data[addExpenseKey]}
+            edit={addToExpenseMap}
+            remove={removeKey}
+          />
+        </div>
+      )}
       </header>
     </div>
   );

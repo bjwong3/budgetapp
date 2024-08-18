@@ -1,22 +1,40 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const Summary = ({data, updateData, incomeKey, expenseKey}) => {
+const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}) => {
   const [editingIncome, setEditingIncome] = useState(false);
   const [originalIncome, setOriginalIncome] = useState(0);
-
   const [incomeValue, setIncomeValue] = useState(data[incomeKey]);
 
-  const sumExpenses = () => {
+  const sumTotalExpenses = () => {
     let sum = 0;
-    for (const [key, value] of Object.entries(data[expenseKey])){
+    for (const [key, value] of Object.entries(data[monthlyExpenseKey])){
+        sum += parseInt(value);
+    }
+    for (const [key, value] of Object.entries(data[addExpenseKey])){
+      sum += parseInt(value);
+    }
+    return sum;
+  }
+
+  const sumMonthlyExpenses = () => {
+    let sum = 0;
+    for (const [key, value] of Object.entries(data[monthlyExpenseKey])){
         sum += parseInt(value);
     }
     return sum;
   }
 
+  const sumOtherExpenses = () => {
+    let sum = 0;
+    for (const [key, value] of Object.entries(data[addExpenseKey])){
+      sum += parseInt(value);
+    }
+    return sum;
+  }
+
   const calculateNetValue = () => {
-    return data[incomeKey] - sumExpenses();
+    return data[incomeKey] - sumTotalExpenses();
   }
 
   const getHeaderClass = () => {
@@ -89,7 +107,9 @@ const Summary = ({data, updateData, incomeKey, expenseKey}) => {
         )}</h2>
         
       </div>
-      <h2 class='text-danger'>Monthly Expenses: ${sumExpenses()}</h2>
+      <h2 class='text-danger'>Total Expenses: ${sumTotalExpenses()}</h2>
+      <h2 class='text-dark'>Monthly Expenses: ${sumMonthlyExpenses()}</h2>
+      <h2 class='text-dark'>Other Expenses: ${sumOtherExpenses()}</h2>
       <div className="mb-2">
         <h2 class={`${getHeaderClass()}`} style={{ display: 'inline-block'}}>Leftover Cash: ${calculateNetValue()}</h2>
       </div>
