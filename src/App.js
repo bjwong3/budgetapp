@@ -19,8 +19,8 @@ function App() {
   const addToExpenseMap = (key, value, type) => {
     setData(prevData => {
       const newData = { ...prevData };
-      if(type == 'Monthly') newData[monthlyExpenseKey][key] = value;
-      else if(type == 'Additional') newData[addExpenseKey][key] = value;
+      if(type === 'Monthly') newData[monthlyExpenseKey][key] = value;
+      else if(type === 'Additional') newData[addExpenseKey][key] = value;
       return newData;
     });
   };
@@ -34,8 +34,8 @@ function App() {
 
   const removeKey = (key, type) => {
     const newData = { ...data };
-    if(type == 'Monthly') delete newData[monthlyExpenseKey][key];
-    else if(type == 'Additional') delete newData[addExpenseKey][key];
+    if(type === 'Monthly') delete newData[monthlyExpenseKey][key];
+    else if(type === 'Additional') delete newData[addExpenseKey][key];
     setData(newData);
   };
 
@@ -44,7 +44,7 @@ function App() {
       <header className="App-header">
         <h1>Budget App</h1>
         <Summary data={data} updateData={updateData} incomeKey={incomeKey} monthlyExpenseKey={monthlyExpenseKey} addExpenseKey={addExpenseKey}/>
-        <DataDisplay data={data} updateData={updateData}  addToExpenseMap={addToExpenseMap} removeKey={removeKey} incomeKey={incomeKey} monthlyExpenseKey={monthlyExpenseKey} addExpenseKey={addExpenseKey}/>
+        <DataDisplay data={data} updateData={updateData}  addToExpenseMap={addToExpenseMap} incomeKey={incomeKey}/>
         {data[monthlyExpenseKey].size !== 0 && data[addExpenseKey].size !== 0 && (
         <div>
           <ExpenseTable

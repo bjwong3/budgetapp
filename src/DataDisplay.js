@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-import ExpenseTable from './ExpenseTable';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, monthlyExpenseKey, addExpenseKey}) => {
+const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
   const [incomeValue, setIncomeValue] = useState('');
   const [expenseValue, setExpenseValue] = useState('');
   const [expenseName, setExpenseName] = useState('');
   const [expenseType, setExpenseType] = useState('');
-  const [editingKey, setEditingKey] = useState(null);
-  const [editKey, setEditKey] = useState('');
-  const [editValue, setEditValue] = useState('');
-  const [originalValue, setOriginalValue] = useState('');
 
   const updateIncome = () => {
     
@@ -52,85 +47,6 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, removeKey, incomeKey, 
   const handleExpenseType = (event) => {
     setExpenseType(event.target.value);
   };
-
-  const handleEditClick = (key, value) => {
-    setEditingKey(key);
-    setEditKey(key);
-    setOriginalValue(JSON.stringify(value));
-    setEditValue(JSON.stringify(value));
-  };
-
-  const handleSaveEdit = (key, value, type) => {
-    if (key && value !== '') {
-      let parsedValue;
-      try {
-        parsedValue = JSON.parse(value);
-      } catch (e) {
-        parsedValue = value;
-      }
-      addToExpenseMap(key, parsedValue, type);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingKey(null);
-    setEditKey('');
-    setEditValue(originalValue);
-  };
-
-  const handleRemoveKey = (key, type) => {
-    removeKey(key, type);
-  };
-
-  const renderTable = (map) => {
-    return (
-      <table className="table table-striped">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Amount</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.keys(map).map((key) => (
-            <tr key={key}>
-              <td>
-                  {key}
-              </td>
-              <td>
-                {editingKey === key ? (
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                  />
-                ) : (
-                  typeof map[key] === 'object' && map[key] !== null ? renderTable(map[key]) : map[key]
-                )}
-              </td>
-              <td>
-                {editingKey === key ? (
-                  <>
-                    <button className="btn btn-success btn-sm" onClick={handleSaveEdit}>Save</button>
-                    <button className="btn btn-secondary btn-sm ms-2" onClick={handleCancelEdit}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button className="btn btn-primary btn-sm" onClick={() => handleEditClick(key, map[key])}>Edit</button>
-                    <button className="btn btn-danger btn-sm ms-2" onClick={() => handleRemoveKey(key)}>Remove</button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
-
-  
 
   return (
     <div className="container mt-4">
