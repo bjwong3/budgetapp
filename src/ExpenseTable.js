@@ -7,6 +7,8 @@ const ExpenseTable = ({ monthlyExpense, addExpense, edit, remove }) => {
   const [editKey, setEditKey] = useState('');
   const [editValue, setEditValue] = useState('');
 
+  if(!monthlyExpense) monthlyExpense = {};
+  if(!addExpense) addExpense = {};
   const mergedData = [
     ...Object.keys(monthlyExpense).map(key => ({ key, value: monthlyExpense[key], type: 'Monthly' })),
     ...Object.keys(addExpense).map(key => ({ key, value: addExpense[key], type: 'One-time' })),
