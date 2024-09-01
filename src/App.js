@@ -8,19 +8,27 @@ import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 
 function App() {
-  const initialData = {
+  const guestData = {
+    email: "Guest",
     income: 0,
     monthlyExpense: {},
-    addExpense: {}
+    addExpense: {},
+    lastAccessedYear: 0,
+    lastAccessedMonth: 1,
+    history: {}
   };
 
   const [user, setUser] = useState(Cookies.load('userEmail') || null);
-  const [userData, setUserData] = useState(Cookies.load(`userData_${user}`) || initialData);
+  const [userData, setUserData] = useState(Cookies.load(`userData_${user}`) || guestData);
 
   useEffect(() => {
-    fetchUserByEmail(user);
+    if(user && user !== 'Guest') {
+      updateUserByEmail(userData);
+      updateLastAccessedDate(user);
+    }
     Cookies.save(`userData_${user}`, userData, { path: '/' });
-  });
+  }, [user]);
+
   const incomeKey = "income";
   const monthlyExpenseKey = "monthlyExpense";
   const addExpenseKey = "addExpense";
@@ -41,11 +49,10 @@ function App() {
     }
   }
 
-  const updateUserByEmail = (data) => {
+  async function updateUserByEmail(data) {
     axios.put(`http://localhost:5000/api/users/${user}`, data)
       .then(response => {
         setUserData(response.data); // Update state with new user data
-        alert('User updated successfully');
       })
       .catch(error => {
         console.error('Error updating user:', error);
@@ -58,9 +65,29 @@ function App() {
         console.error('Error adding user:', error);
       });
   }
-  
 
-  const handleGoogleLoginSuccess = async (credentialResponse) => {
+  async function updateLastAccessedDate() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    // If there is a need to move to history, move first
+    if (userData["lastAccessedYear"] < year || userData["lastAccessedMonth"] < month) {
+      await moveToHistory();
+    }
+
+    await setUserData(prevData => {
+      const newData = { ...prevData };
+      newData["lastAccessedYear"] = year;
+      newData["lastAccessedMonth"] = month;
+
+      Cookies.save(`userData_${user}`, newData, { path: '/' });
+      if (newData['email'] !== 'Guest') updateUserByEmail(newData);
+
+      return newData;
+    });
+  }
+
+  async function handleGoogleLoginSuccess(credentialResponse) {
     const decoded = jwtDecode(credentialResponse.credential);
     const email = decoded.email;
     // Save the email in cookies
@@ -71,17 +98,29 @@ function App() {
       Cookies.save(`userData_${email}`, userData, { path: '/' });
     }
     else {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
       const newData = { 
         email: email,
         income: 0,
         monthlyExpense: {},
-        addExpense: {} 
+        addExpense: {},
+        lastAccessedYear: year,
+        lastAccessedMonth: month,
+        history: {}
       };
       createNewUser(newData);
       setUserData(newData);
     }
     Cookies.save(`userData_${email}`, userData, { path: '/' });
     setUser(email);
+  };
+
+  const handleGuestSignIn = () => {
+    Cookies.save('userEmail', "Guest", { path: '/' });
+    setUser("Guest");
+    setUserData(guestData);
   };
 
   const handleGoogleLoginError = () => {
@@ -91,7 +130,7 @@ function App() {
   const handleLogout = () => {
     Cookies.remove('userEmail', { path: '/' });
     setUser(null);
-    setUserData(initialData);
+    setUserData(guestData);
   };    
 
   const saveUserData = (key, value) => {
@@ -99,7 +138,7 @@ function App() {
     setUserData(updatedData);
     // Save the user-specific data in cookies
     Cookies.save(`userData_${user}`, updatedData, { path: '/' });
-    updateUserByEmail(updatedData);
+    if (userData['email'] !== 'Guest') updateUserByEmail(updatedData);
   };
 
   const addToExpenseMap = (key, value, type) => {
@@ -108,17 +147,54 @@ function App() {
       if(type === 'Monthly') newData[monthlyExpenseKey][key] = value;
       else if(type === 'Additional') newData[addExpenseKey][key] = value;
       Cookies.save(`userData_${user}`, newData, { path: '/' });
-      updateUserByEmail(newData);
+      if (userData['email'] !== 'Guest') updateUserByEmail(newData);
       return newData;
     });
   };
+
+  async function moveToHistory() {
+    let updatedData;
+
+    setUserData((prevData) => {
+      const newData = { ...prevData };
+
+      const year = newData['lastAccessedYear'];
+      const month = newData['lastAccessedMonth'];
+
+      if (!newData['history'][year]) {
+        newData['history'][year] = {};
+      }
+
+      if (!newData['history'][year][month]) {
+        newData['history'][year][month] = {
+          [monthlyExpenseKey]: { ...newData[monthlyExpenseKey] },
+          [addExpenseKey]: { ...newData[addExpenseKey] }
+        };
+      }
+
+      // Clear the current expense maps for the new month
+      newData[addExpenseKey] = {};
+
+      // Save to cookies
+      Cookies.save(`userData_${user}`, newData, { path: '/' });
+
+      updatedData = newData; // Store updated data for further use
+
+      return newData;
+    });
+
+    // Ensure database update after setting state
+    if (updatedData && updatedData['email'] !== 'Guest') {
+      await updateUserByEmail(updatedData);
+    }
+  }
 
   const removeKey = (key, type) => {
     const newData = { ...userData };
     if(type === 'Monthly') delete newData[monthlyExpenseKey][key];
     else if(type === 'One-time') delete newData[addExpenseKey][key];
     setUserData(newData);
-    updateUserByEmail(newData);
+    if (userData['email'] !== 'Guest') updateUserByEmail(newData);
   };
 
   return (
@@ -128,6 +204,7 @@ function App() {
           <>
             <h2>Welcome, {user}!</h2>
             <button className="btn btn-secondary mb-3" onClick={handleLogout}>Logout</button>
+            <button className="btn btn-secondary mb-3" onClick={moveToHistory}>Move to History</button>
             <header className="App-header">
               <h1>Budget App</h1>
               <Summary data={userData} updateData={saveUserData} incomeKey={incomeKey} monthlyExpenseKey={monthlyExpenseKey} addExpenseKey={addExpenseKey}/>
@@ -151,6 +228,9 @@ function App() {
               onSuccess={handleGoogleLoginSuccess}
               onError={handleGoogleLoginError}
             />
+            <button onClick={handleGuestSignIn} className="btn btn-secondary">
+              Sign In Without Account
+            </button>
           </>
         )}
       </div>

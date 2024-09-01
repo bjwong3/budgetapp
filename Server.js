@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema({
 	addExpense: {
     type: Map,
     of: Number
+  },
+  lastAccessedYear: Number,
+  lastAccessedMonth: Number,
+  history: {
+    type: Map,
+    of: Object
   }
 });
 
