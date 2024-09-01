@@ -4,7 +4,7 @@ import Summary from './Summary';
 import ExpenseTable from './ExpenseTable';
 import Cookies from 'react-cookies';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import axios from 'axios';
 
 function App() {
@@ -18,103 +18,115 @@ function App() {
     history: {}
   };
 
-  const [user, setUser] = useState(Cookies.load('userEmail') || null);
-  const [userData, setUserData] = useState(Cookies.load(`userData_${user}`) || guestData);
+  const currentDate = new Date();
 
-  useEffect(() => {
-    if(user && user !== 'Guest') {
-      updateUserByEmail(userData);
-      updateLastAccessedDate(user);
+  const [user, setUser] = useState(Cookies.load('userEmail') || null);
+  const [userData, setUserData] = useState(guestData);
+  const [currentAccessedYear, setCurrentAccessedYear] = useState(currentDate.getFullYear());
+  const [currentAccessedMonth, setCurrentAccessedMonth] = useState(currentDate.getMonth() + 1);
+
+  // Function to fetch user data by email
+  const fetchUserByEmail = async (email) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/users/${email}`);
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return null; // User not found
+      } else {
+        console.error('Error fetching user:', error);
+        throw error;
+      }
     }
-    Cookies.save(`userData_${user}`, userData, { path: '/' });
-  }, [user]);
+  };
 
   const incomeKey = "income";
   const monthlyExpenseKey = "monthlyExpense";
   const addExpenseKey = "addExpense";
 
-  async function fetchUserByEmail(email) {
+  // Function to update user data by email
+  const updateUserByEmail = async (data) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/users/${email}`); // Wait for the GET request to complete
-      return response.data; // Return the fetched data
+      const response = await axios.put(`http://localhost:5000/api/users/${user}`, data);
+      setUserData(response.data); // Update state with new user data
+      Cookies.save(`userData_${user}`, data, { path: '/' });
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        // If the user is not found (404 error), return null
-        return null;
-      } else {
-        // Handle other errors
-        console.error('Error fetching user:', error);
-        throw error; // Re-throw error to be handled elsewhere
-      }
+      console.error('Error updating user:', error);
     }
-  }
-
-  async function updateUserByEmail(data) {
-    axios.put(`http://localhost:5000/api/users/${user}`, data)
-      .then(response => {
-        setUserData(response.data); // Update state with new user data
-      })
-      .catch(error => {
-        console.error('Error updating user:', error);
-      });
   };
 
-  const createNewUser = (data) => {
-    axios.post('http://localhost:5000/api/users', data)
-      .catch(error => {
-        console.error('Error adding user:', error);
-      });
-  }
+  // Function to create a new user
+  const createNewUser = async (data) => {
+    try {
+      await axios.post('http://localhost:5000/api/users', data);
+    } catch (error) {
+      console.error('Error adding user:', error);
+    }
+  };
 
-  async function updateLastAccessedDate() {
+  // Function to update the last accessed date
+  const updateLastAccessedDate = async () => {
     const date = new Date();
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
-    // If there is a need to move to history, move first
-    if (userData["lastAccessedYear"] < year || userData["lastAccessedMonth"] < month) {
-      await moveToHistory();
+    const data = await fetchUserByEmail(user);
+
+    if (data["lastAccessedYear"] < year || data["lastAccessedMonth"] < month) {
+      await moveToHistory(); // Move to history if needed
     }
 
-    await setUserData(prevData => {
-      const newData = { ...prevData };
-      newData["lastAccessedYear"] = year;
-      newData["lastAccessedMonth"] = month;
-
+    setUserData((prevData) => {
+      const newData = { ...prevData, lastAccessedYear: year, lastAccessedMonth: month };
       Cookies.save(`userData_${user}`, newData, { path: '/' });
       if (newData['email'] !== 'Guest') updateUserByEmail(newData);
-
       return newData;
     });
-  }
+  };
 
-  async function handleGoogleLoginSuccess(credentialResponse) {
+  // Fetch user data when component mounts or user changes
+  useEffect(() => {
+    const initializeUserData = async () => {
+      if (user && user !== 'Guest') {
+        const data = await fetchUserByEmail(user);
+        if (data) {
+          setUserData(data);
+          await updateLastAccessedDate(); // Update last accessed date on initial load
+        } else {
+          setUserData(guestData);
+        }
+      } else {
+        setUserData(guestData);
+      }
+    };
+
+    initializeUserData();
+  }, [user]);
+
+  // Handle Google login success
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
     const decoded = jwtDecode(credentialResponse.credential);
     const email = decoded.email;
-    // Save the email in cookies
     Cookies.save('userEmail', email, { path: '/' });
+    setUser(email);
+
     const result = await fetchUserByEmail(email);
-    if(result) {
-      await setUserData(result);
-      Cookies.save(`userData_${email}`, userData, { path: '/' });
-    }
-    else {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const newData = { 
+    if (result) {
+      setUserData(result);
+      Cookies.save(`userData_${email}`, result, { path: '/' });
+    } else {
+      const newData = {
         email: email,
         income: 0,
         monthlyExpense: {},
         addExpense: {},
-        lastAccessedYear: year,
-        lastAccessedMonth: month,
+        lastAccessedYear: currentAccessedYear,
+        lastAccessedMonth: currentAccessedMonth,
         history: {}
       };
-      createNewUser(newData);
+      await createNewUser(newData);
       setUserData(newData);
+      Cookies.save(`userData_${email}`, newData, { path: '/' });
     }
-    Cookies.save(`userData_${email}`, userData, { path: '/' });
-    setUser(email);
   };
 
   const handleGuestSignIn = () => {
@@ -131,33 +143,33 @@ function App() {
     Cookies.remove('userEmail', { path: '/' });
     setUser(null);
     setUserData(guestData);
-  };    
+  };
 
+  // Function to save user data
   const saveUserData = (key, value) => {
     const updatedData = { ...userData, [key]: value };
     setUserData(updatedData);
-    // Save the user-specific data in cookies
     Cookies.save(`userData_${user}`, updatedData, { path: '/' });
     if (userData['email'] !== 'Guest') updateUserByEmail(updatedData);
   };
 
   const addToExpenseMap = (key, value, type) => {
-    setUserData(prevData => {
+    setUserData((prevData) => {
       const newData = { ...prevData };
-      if(type === 'Monthly') newData[monthlyExpenseKey][key] = value;
-      else if(type === 'Additional') newData[addExpenseKey][key] = value;
+      if (type === 'Monthly') newData[monthlyExpenseKey][key] = value;
+      else if (type === 'Additional') newData[addExpenseKey][key] = value;
       Cookies.save(`userData_${user}`, newData, { path: '/' });
       if (userData['email'] !== 'Guest') updateUserByEmail(newData);
       return newData;
     });
   };
 
-  async function moveToHistory() {
+  // Function to move data to history
+  const moveToHistory = async () => {
     let updatedData;
 
     setUserData((prevData) => {
       const newData = { ...prevData };
-
       const year = newData['lastAccessedYear'];
       const month = newData['lastAccessedMonth'];
 
@@ -172,27 +184,23 @@ function App() {
         };
       }
 
-      // Clear the current expense maps for the new month
       newData[addExpenseKey] = {};
 
-      // Save to cookies
       Cookies.save(`userData_${user}`, newData, { path: '/' });
 
-      updatedData = newData; // Store updated data for further use
-
+      updatedData = newData;
       return newData;
     });
 
-    // Ensure database update after setting state
     if (updatedData && updatedData['email'] !== 'Guest') {
       await updateUserByEmail(updatedData);
     }
-  }
+  };
 
   const removeKey = (key, type) => {
     const newData = { ...userData };
-    if(type === 'Monthly') delete newData[monthlyExpenseKey][key];
-    else if(type === 'One-time') delete newData[addExpenseKey][key];
+    if (type === 'Monthly') delete newData[monthlyExpenseKey][key];
+    else if (type === 'One-time') delete newData[addExpenseKey][key];
     setUserData(newData);
     if (userData['email'] !== 'Guest') updateUserByEmail(newData);
   };
@@ -208,8 +216,8 @@ function App() {
             <header className="App-header">
               <h1>Budget App</h1>
               <Summary data={userData} updateData={saveUserData} incomeKey={incomeKey} monthlyExpenseKey={monthlyExpenseKey} addExpenseKey={addExpenseKey}/>
-              <DataDisplay data={userData} updateData={saveUserData}  addToExpenseMap={addToExpenseMap} incomeKey={incomeKey}/>
-              {userData[monthlyExpenseKey] !== null && userData[addExpenseKey] !== null && userData[monthlyExpenseKey] !== undefined && userData[addExpenseKey] !== undefined && userData[monthlyExpenseKey].size !== 0 && userData[addExpenseKey].size !== 0 && (
+              <DataDisplay data={userData} updateData={saveUserData} addToExpenseMap={addToExpenseMap} incomeKey={incomeKey}/>
+              {userData[monthlyExpenseKey] && userData[addExpenseKey] && Object.keys(userData[monthlyExpenseKey]).length !== 0 && Object.keys(userData[addExpenseKey]).length !== 0 && (
                 <div>
                   <ExpenseTable
                     monthlyExpense={userData[monthlyExpenseKey]}
