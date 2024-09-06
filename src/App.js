@@ -26,7 +26,7 @@ function App() {
   // Function to fetch user data by email
   const fetchUserByEmail = async (email) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/users/${email}`);
+      const response = await axios.get(`https://budgetapp-mocha.vercel.app/api/users/${email}`);
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -45,7 +45,7 @@ function App() {
   // Function to update user data by email
   const updateUserByEmail = async (data) => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/users/${user}`, data);
+      const response = await axios.put(`https://budgetapp-mocha.vercel.app/api/users/${user}`, data);
       setUserData(response.data); // Update state with new user data
     } catch (error) {
       console.error('Error updating user:', error);
@@ -55,7 +55,7 @@ function App() {
   // Function to create a new user
   const createNewUser = async (data) => {
     try {
-      await axios.post('http://localhost:5000/api/users', data);
+      await axios.post('https://budgetapp-mocha.vercel.app/api/users', data);
     } catch (error) {
       console.error('Error adding user:', error);
     }
