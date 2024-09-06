@@ -50,15 +50,6 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
 
   return (
     <div className="container mt-4">
-      <h1>Data Display</h1>
-      <textarea
-        className='form-control mb-4'
-        readOnly
-        value={JSON.stringify(data, null, 2)}
-        rows={10}
-        cols={50}
-      />
-
       <div className="row mb-3">
         Monthly Income:  &nbsp;
         <div className="col">

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 import DataDisplay from './DataDisplay';
 import Summary from './Summary';
 import ExpenseTable from './ExpenseTable';
+import HistoryDropdown from './HistoryDropdown';
 import Cookies from 'react-cookies';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import {jwtDecode} from 'jwt-decode';
@@ -18,12 +20,8 @@ function App() {
     history: {}
   };
 
-  const currentDate = new Date();
-
   const [user, setUser] = useState(Cookies.load('userEmail') || null);
   const [userData, setUserData] = useState(guestData);
-  const [currentAccessedYear, setCurrentAccessedYear] = useState(currentDate.getFullYear());
-  const [currentAccessedMonth, setCurrentAccessedMonth] = useState(currentDate.getMonth() + 1);
 
   // Function to fetch user data by email
   const fetchUserByEmail = async (email) => {
@@ -49,7 +47,6 @@ function App() {
     try {
       const response = await axios.put(`http://localhost:5000/api/users/${user}`, data);
       setUserData(response.data); // Update state with new user data
-      Cookies.save(`userData_${user}`, data, { path: '/' });
     } catch (error) {
       console.error('Error updating user:', error);
     }
@@ -77,7 +74,6 @@ function App() {
 
     setUserData((prevData) => {
       const newData = { ...prevData, lastAccessedYear: year, lastAccessedMonth: month };
-      Cookies.save(`userData_${user}`, newData, { path: '/' });
       if (newData['email'] !== 'Guest') updateUserByEmail(newData);
       return newData;
     });
@@ -112,20 +108,19 @@ function App() {
     const result = await fetchUserByEmail(email);
     if (result) {
       setUserData(result);
-      Cookies.save(`userData_${email}`, result, { path: '/' });
     } else {
+      const date = new Date();
       const newData = {
         email: email,
         income: 0,
         monthlyExpense: {},
         addExpense: {},
-        lastAccessedYear: currentAccessedYear,
-        lastAccessedMonth: currentAccessedMonth,
+        lastAccessedYear: date.getFullYear(),
+        lastAccessedMonth: date.getMonth() + 1,
         history: {}
       };
       await createNewUser(newData);
       setUserData(newData);
-      Cookies.save(`userData_${email}`, newData, { path: '/' });
     }
   };
 
@@ -149,7 +144,6 @@ function App() {
   const saveUserData = (key, value) => {
     const updatedData = { ...userData, [key]: value };
     setUserData(updatedData);
-    Cookies.save(`userData_${user}`, updatedData, { path: '/' });
     if (userData['email'] !== 'Guest') updateUserByEmail(updatedData);
   };
 
@@ -158,7 +152,6 @@ function App() {
       const newData = { ...prevData };
       if (type === 'Monthly') newData[monthlyExpenseKey][key] = value;
       else if (type === 'Additional') newData[addExpenseKey][key] = value;
-      Cookies.save(`userData_${user}`, newData, { path: '/' });
       if (userData['email'] !== 'Guest') updateUserByEmail(newData);
       return newData;
     });
@@ -186,8 +179,6 @@ function App() {
 
       newData[addExpenseKey] = {};
 
-      Cookies.save(`userData_${user}`, newData, { path: '/' });
-
       updatedData = newData;
       return newData;
     });
@@ -207,41 +198,77 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId="229103202214-9up02q226v3kvboovpb5ibv6ebaieflt.apps.googleusercontent.com">
-      <div className="App">
+      <Container className="mt-4">
         {user ? (
           <>
-            <h2>Welcome, {user}!</h2>
-            <button className="btn btn-secondary mb-3" onClick={handleLogout}>Logout</button>
-            <button className="btn btn-secondary mb-3" onClick={moveToHistory}>Move to History</button>
-            <header className="App-header">
-              <h1>Budget App</h1>
-              <Summary data={userData} updateData={saveUserData} incomeKey={incomeKey} monthlyExpenseKey={monthlyExpenseKey} addExpenseKey={addExpenseKey}/>
-              <DataDisplay data={userData} updateData={saveUserData} addToExpenseMap={addToExpenseMap} incomeKey={incomeKey}/>
-              {userData[monthlyExpenseKey] && userData[addExpenseKey] && Object.keys(userData[monthlyExpenseKey]).length !== 0 && Object.keys(userData[addExpenseKey]).length !== 0 && (
-                <div>
+            <Row className="mb-4">
+              <Col>
+                <h2>Welcome, {user}!</h2>
+              </Col>
+              <Col md={1} className="text-right">
+                <Button variant="secondary" onClick={handleLogout} className="ml-2">Logout</Button>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={4}>
+                <Summary 
+                  data={userData} 
+                  updateData={saveUserData} 
+                  incomeKey={incomeKey} 
+                  monthlyExpenseKey={monthlyExpenseKey} 
+                  addExpenseKey={addExpenseKey}
+                />
+              </Col>
+            </Row>
+
+            <Row>
+              <Col>
+                <DataDisplay 
+                  data={userData} 
+                  updateData={saveUserData} 
+                  addToExpenseMap={addToExpenseMap} 
+                  incomeKey={incomeKey}
+                />
+              </Col>
+            </Row>
+
+            {userData[monthlyExpenseKey] && userData[addExpenseKey] && (
+              <Row className="mt-4">
+                <Col>
                   <ExpenseTable
                     monthlyExpense={userData[monthlyExpenseKey]}
                     addExpense={userData[addExpenseKey]}
                     edit={addToExpenseMap}
                     remove={removeKey}
                   />
-                </div>
-              )}
-            </header>
+                </Col>
+              </Row>
+            )}
+
+            <Row className="mt-4">
+              <Col md={12}>
+                <HistoryDropdown history={userData.history} />
+              </Col>
+            </Row>
           </>
         ) : (
           <>
-            <h2>Login</h2>
-            <GoogleLogin
-              onSuccess={handleGoogleLoginSuccess}
-              onError={handleGoogleLoginError}
-            />
-            <button onClick={handleGuestSignIn} className="btn btn-secondary">
-              Sign In Without Account
-            </button>
+            <Row className="justify-content-center">
+              <Col md={6} className="text-center">
+                <h2>Login</h2>
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginError}
+                />
+                <Button onClick={handleGuestSignIn} variant="secondary" className="mt-3">
+                  Sign In Without Account
+                </Button>
+              </Col>
+            </Row>
           </>
         )}
-      </div>
+      </Container>
     </GoogleOAuthProvider>
   );
 }
