@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const ExpenseTable = ({ monthlyExpense, addExpense, edit, remove }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [editRow, setEditRow] = useState(null);
+  const [editKey, setEditKey] = useState(null);
   const [editValue, setEditValue] = useState('');
 
   if(!monthlyExpense) monthlyExpense = {};
