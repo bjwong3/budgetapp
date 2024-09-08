@@ -53,80 +53,68 @@ const ExpenseTable = ({ monthlyExpense, addExpense, edit, remove }) => {
   };
 
   return (
-    <div className="container mt-4" style={{ maxHeight: "400px", overflow: "hidden", position: "relative" }}>
+    <div className="container mt-4">
       <h2>List of Expenses</h2>
-      <table className="table table-striped" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate" }}>
-        <thead style={{ display: "table", width: "100%", tableLayout: "fixed" }}>
-          <tr>
-            <th onClick={() => handleSort('key')} style={{ cursor: 'pointer' }}>
-              Name {sortConfig.key === 'key' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-            </th>
-            <th onClick={() => handleSort('value')} style={{ cursor: 'pointer', }}>
-              Amount {sortConfig.key === 'value' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-            </th>
-            <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
-              Type {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-            </th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-      </table>
-      <div style={{ maxHeight: "300px", overflowY: "scroll" }}>
-        <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate" }}>
-          <tbody style={{ display: "block" }}>
-              {sortedData.map((item, index) => (
-                <tr key={index} style={{ display: "table", width: "100%", tableLayout: "fixed" }}>
-                  <td style={{borderBottom: "1px solid #ddd", padding: "5px"}}>
-                    {item.key}
-                  </td>
-                  <td style={{borderBottom: "1px solid #ddd", padding: "5px"}}>
-                    {editRow === index ? (
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                      />
-                    ) : (
-                      typeof item.value === 'object' && item.value !== null ? JSON.stringify(item.value) : item.value
-                    )}
-                  </td>
-                  <td style={{borderBottom: "1px solid #ddd", padding: "5px"}}>{item.type}</td>
-                  <td style={{borderBottom: "1px solid #ddd", padding: "5px"}}>
+
+      {/* Responsive table container */}
+      <div className="table-responsive">
+        <table className="table table-striped" style={{ tableLayout: 'auto', wordWrap: 'break-word' }}>
+          <thead>
+            <tr>
+              <th onClick={() => handleSort('key')} style={{ cursor: 'pointer' }}>
+                Name {sortConfig.key === 'key' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+              </th>
+              <th onClick={() => handleSort('value')} style={{ cursor: 'pointer' }}>
+                Amount {sortConfig.key === 'value' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+              </th>
+              <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
+                Type {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+              </th>
+              <th className="d-flex justify-content-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.key}</td>
+                <td>
+                  {editRow === index ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                    />
+                  ) : (
+                    typeof item.value === 'object' && item.value !== null ? JSON.stringify(item.value) : item.value
+                  )}
+                </td>
+                <td>{item.type}</td>
+                <td>
+                  <div className="d-flex justify-content-center">
                     {editRow === index ? (
                       <>
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => handleSaveClick(index, item.type)}
-                        >
+                        <button className="btn btn-success btn-sm" onClick={() => handleSaveClick(index, item.type)}>
                           Save
                         </button>
-                        <button
-                          className="btn btn-secondary btn-sm ms-2"
-                          onClick={() => setEditRow(null)}
-                        >
+                        <button className="btn btn-secondary btn-sm ms-2" onClick={() => setEditRow(null)}>
                           Cancel
                         </button>
                       </>
                     ) : (
                       <>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleEditClick(index, item.key, item.value)}
-                        >
+                        <button className="btn btn-primary btn-sm" onClick={() => handleEditClick(index, item.key, item.value)}>
                           Edit
                         </button>
-                        <button
-                          className="btn btn-danger btn-sm ms-2"
-                          onClick={() => handleRemoveClick(index, item.type)}
-                        >
+                        <button className="btn btn-danger btn-sm ms-2" onClick={() => handleRemoveClick(index, item.type)}>
                           Remove
                         </button>
                       </>
                     )}
-                  </td>
-                </tr>
-              ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
