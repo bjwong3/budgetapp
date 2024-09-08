@@ -6,21 +6,12 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}
   const [originalIncome, setOriginalIncome] = useState(0);
   const [incomeValue, setIncomeValue] = useState(data[incomeKey]);
 
+  // Return sum of monthly and additional expenses
   const sumTotalExpenses = () => {
-    let sum = 0;
-    if(data[monthlyExpenseKey]){
-      for (const [key, value] of Object.entries(data[monthlyExpenseKey])){
-        sum += parseInt(value);
-      }
-    }
-    if(data[addExpenseKey]){
-      for (const [key, value] of Object.entries(data[addExpenseKey])){
-        sum += parseInt(value);
-      }
-    }
-    return sum;
+    return sumMonthlyExpenses() + sumOtherExpenses();
   }
 
+  // Return sum of monthly expenses
   const sumMonthlyExpenses = () => {
     let sum = 0;
     if(data[monthlyExpenseKey]){
@@ -31,6 +22,7 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}
     return sum;
   }
 
+  // Return sum of additional expenses
   const sumOtherExpenses = () => {
     let sum = 0;
     if(data[addExpenseKey]){
@@ -41,10 +33,12 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}
     return sum;
   }
 
+  // Return sum of monthly budget - total expenses
   const calculateNetValue = () => {
     return data[incomeKey] ? data[incomeKey] - sumTotalExpenses() : 0 - sumTotalExpenses();
   }
 
+  // Determines styling of net value display text
   const getHeaderClass = () => {
     const netValue = calculateNetValue();
     if (netValue > 0) {

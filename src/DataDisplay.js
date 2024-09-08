@@ -7,8 +7,8 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
   const [expenseName, setExpenseName] = useState('');
   const [expenseType, setExpenseType] = useState('');
 
+  // Update user data income
   const updateIncome = () => {
-    
     if (incomeValue !== '' && incomeValue !== undefined && !isNaN(incomeValue)) {
       updateData(incomeKey, incomeValue);
       setIncomeValue('');
@@ -25,6 +25,7 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
     }
   };
 
+  // Add new expense to user data
   const addToExpense = () => {
     if (expenseName !== '' && expenseValue !== '' && expenseType !== '' && expenseValue !== undefined && !isNaN(expenseValue)) {
       addToExpenseMap(expenseName, expenseValue, expenseType);

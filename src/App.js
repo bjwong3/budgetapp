@@ -188,6 +188,7 @@ function App() {
     }
   };
 
+  // Remove expense from user data
   const removeKey = (key, type) => {
     const newData = { ...userData };
     if (type === 'Monthly') delete newData[monthlyExpenseKey][key];
