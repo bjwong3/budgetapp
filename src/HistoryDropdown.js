@@ -50,8 +50,8 @@ function HistoryDropdown({ history }) {
               </tr>
             ))}
             <tr className="font-weight-bold">
-              <td>Total</td>
-              <td>${totalExpenses.toFixed(2)}</td> {/* Display total amount */}
+              <td style={{color: "blue"}}>Total</td>
+              <td style={{color: "blue"}}>${totalExpenses.toFixed(2)}</td> {/* Display total amount */}
             </tr>
           </tbody>
         </Table>

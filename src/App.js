@@ -55,7 +55,7 @@ function App() {
   // Function to create a new user
   const createNewUser = async (data) => {
     try {
-      await axios.post('https://budgetapp-server.vercel.app/api/users', data);
+      await axios.post(`https://budgetapp-server.vercel.app/api/users`, data);
     } catch (error) {
       console.error('Error adding user:', error);
     }
