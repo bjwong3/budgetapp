@@ -89,7 +89,7 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}
     <div className="container mt-4">
       <h1>Summary</h1>
       <div className="mb-2">
-        <h2 class='text-success'>Monthly Income: ${editingIncome ? (
+        <h2 class='text-success'>Monthly Budget: ${editingIncome ? (
           <>
             <input
               type="number"
