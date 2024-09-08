@@ -51,7 +51,7 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
   return (
     <div className="container mt-4">
       <div className="row mb-3">
-        Monthly Income:  &nbsp;
+        Monthly Budget:  &nbsp;
         <div className="col">
           <input
             type="text"
