@@ -16,7 +16,7 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}
     let sum = 0;
     if(data[monthlyExpenseKey]){
       for (const [key, value] of Object.entries(data[monthlyExpenseKey])){
-        sum += parseInt(value);
+        sum += parseFloat(value);
       }
     }
     return sum;
@@ -27,7 +27,7 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}
     let sum = 0;
     if(data[addExpenseKey]){
       for (const [key, value] of Object.entries(data[addExpenseKey])){
-        sum += parseInt(value);
+        sum += parseFloat(value);
       }
     }
     return sum;

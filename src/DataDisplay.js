@@ -17,8 +17,8 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
 
   const handleIncomeValue = (e) => {
     const value = e.target.value
-    if (value !== "" && !isNaN(value)) {
-        setIncomeValue(parseInt(value));
+    if (value !== "") {
+        setIncomeValue(parseFloat(value));
     }
     else if (value === ""){
         setIncomeValue('');
@@ -37,8 +37,8 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
 
   const handleExpenseValue = (e) => {
     const value = e.target.value
-    if (value !== "" && !isNaN(value)) {
-        setExpenseValue(parseInt(value));
+    if (value !== "") {
+        setExpenseValue(parseFloat(value));
     }
     else if (value === ""){
         setExpenseValue('');
@@ -55,7 +55,7 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
         Monthly Budget:  &nbsp;
         <div className="col">
           <input
-            type="text"
+            type="number"
             className="form-control"
             placeholder="Value"
             value={incomeValue}
@@ -80,7 +80,7 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
         </div>
         <div className="col">
           <input
-            type="text"
+            type="number"
             className="form-control"
             placeholder="Value"
             value={expenseValue}
