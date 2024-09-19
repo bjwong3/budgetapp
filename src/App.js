@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import { Container, Row, Col, Button, Tab, Tabs, Modal, Form } from 'react-bootstrap';
 import DataDisplay from './DataDisplay';
 import Summary from './Summary';
 import ExpenseTable from './ExpenseTable';
@@ -12,9 +12,16 @@ import axios from 'axios';
 function App() {
   const guestData = {
     email: "Guest",
-    income: 0,
-    monthlyExpense: {},
-    addExpense: {},
+    budgets: 
+    [
+      {
+        eventKey: 0,
+        title: 'Home',
+        income: 0,
+        monthlyExpense: {},
+        addExpense: {}
+      }
+    ],
     lastAccessedYear: 0,
     lastAccessedMonth: 1,
     history: {}
@@ -22,6 +29,14 @@ function App() {
 
   const [user, setUser] = useState(Cookies.load('userEmail') || null);
   const [userData, setUserData] = useState(guestData);
+  const [extraTabs, setTabs] = useState(guestData['budgets']);
+  const [activeKey, setActiveKey] = useState(0);
+  const [showModal, setShowModal] = useState(false); // Modal visibility state
+  const [newBudgetName, setNewBudgetName] = useState(''); // New budget name state
+
+  const incomeKey = "income";
+  const monthlyExpenseKey = "monthlyExpense";
+  const addExpenseKey = "addExpense";
 
   // Function to fetch user data by email
   const fetchUserByEmail = async (email) => {
@@ -38,15 +53,12 @@ function App() {
     }
   };
 
-  const incomeKey = "income";
-  const monthlyExpenseKey = "monthlyExpense";
-  const addExpenseKey = "addExpense";
-
   // Function to update user data by email
   const updateUserByEmail = async (data) => {
     try {
       const response = await axios.put(`https://budgetapp-server.vercel.app/api/users/${user}`, data);
       setUserData(response.data); // Update state with new user data
+      setTabs(response.data['budgets']);
     } catch (error) {
       console.error('Error updating user:', error);
     }
@@ -59,6 +71,50 @@ function App() {
     } catch (error) {
       console.error('Error adding user:', error);
     }
+  };
+
+  const addNewTab = () => {
+    setShowModal(true); // Open the modal when "Add Budget" is clicked
+  };
+
+  const handleAddBudget = () => {
+    if (!newBudgetName) return; // Prevent adding if no name is entered
+
+    const newTabKey = extraTabs.length; // Generate a unique key for the new tab
+    const newTab = {
+      eventKey: newTabKey,
+      title: newBudgetName || `New Budget ${newTabKey}`, // Use the new budget name entered by the user
+      income: 0,
+      monthlyExpense: {},
+      addExpense: {}
+    };
+
+    const newData = { ...userData };
+    newData['budgets'].push(newTab);
+    setUserData(newData);
+    setTabs([...extraTabs, newTab]); // Add the new tab to the list of tabs
+    setActiveKey(newTabKey); // Automatically switch to the newly added tab
+    setNewBudgetName(''); // Reset the budget name field
+    setShowModal(false); // Close the modal
+    if (userData['email'] !== 'Guest') updateUserByEmail(newData);
+  };
+
+  // Function to remove a budget
+  const handleRemoveBudget = (eventKey) => {
+    const newData = { ...userData };
+    newData['budgets'] = newData['budgets'].filter(tab => tab.eventKey !== eventKey);
+
+    setUserData(newData);
+    setTabs(newData['budgets']);
+
+    // Set active tab to the first remaining tab or default to 0
+    if (newData['budgets'].length > 0) {
+      setActiveKey(newData['budgets'][0].eventKey);
+    } else {
+      setActiveKey(0);
+    }
+
+    if (userData['email'] !== 'Guest') updateUserByEmail(newData);
   };
 
   // Function to update the last accessed date
@@ -86,12 +142,15 @@ function App() {
         const data = await fetchUserByEmail(user);
         if (data) {
           setUserData(data);
+          setTabs(data['budgets']);
           await updateLastAccessedDate(); // Update last accessed date on initial load
         } else {
           setUserData(guestData);
+          setTabs(guestData['budgets']);
         }
       } else {
         setUserData(guestData);
+        setTabs(guestData['budgets']);
       }
     };
 
@@ -108,19 +167,28 @@ function App() {
     const result = await fetchUserByEmail(email);
     if (result) {
       setUserData(result);
+      setTabs(result['budgets']);
     } else {
       const date = new Date();
       const newData = {
         email: email,
-        income: 0,
-        monthlyExpense: {},
-        addExpense: {},
+        budgets: 
+        [
+          {
+            eventKey: 0,
+            title: 'Home',
+            income: 0,
+            monthlyExpense: {},
+            addExpense: {}
+          }
+        ],
         lastAccessedYear: date.getFullYear(),
         lastAccessedMonth: date.getMonth() + 1,
         history: {}
       };
       await createNewUser(newData);
       setUserData(newData);
+      setTabs(newData['budgets']);
     }
   };
 
@@ -128,6 +196,7 @@ function App() {
     Cookies.save('userEmail', "Guest", { path: '/' });
     setUser("Guest");
     setUserData(guestData);
+    setTabs(guestData['budgets']);
   };
 
   const handleGoogleLoginError = () => {
@@ -138,20 +207,29 @@ function App() {
     Cookies.remove('userEmail', { path: '/' });
     setUser(null);
     setUserData(guestData);
+    setTabs(guestData['budgets']);
   };
 
   // Function to save user data
-  const saveUserData = (key, value) => {
-    const updatedData = { ...userData, [key]: value };
-    setUserData(updatedData);
-    if (userData['email'] !== 'Guest') updateUserByEmail(updatedData);
+  const saveUserData = (key, value, budget) => {
+    const newData = { ...userData };
+    newData['budgets'][budget][key] = value;
+    setUserData(newData);
+    setTabs(newData['budgets']);
+    if (userData['email'] !== 'Guest') updateUserByEmail(newData);
   };
 
-  const addToExpenseMap = (key, value, type) => {
+  const addToExpenseMap = async (key, value, type, budget) => {
     setUserData((prevData) => {
       const newData = { ...prevData };
-      if (type === 'Monthly') newData[monthlyExpenseKey][key] = value;
-      else if (type === 'Additional') newData[addExpenseKey][key] = value;
+      if (type === 'Monthly') {
+        if(newData['budgets'][budget][monthlyExpenseKey] === undefined) newData['budgets'][budget][monthlyExpenseKey] = {};
+        newData['budgets'][budget][monthlyExpenseKey][key] = value;
+      }
+      else if (type === 'Additional') {
+        if(newData['budgets'][budget][addExpenseKey] === undefined) newData['budgets'][budget][addExpenseKey] = {};
+        newData['budgets'][budget][addExpenseKey][key] = value;
+      } 
       if (userData['email'] !== 'Guest') updateUserByEmail(newData);
       return newData;
     });
@@ -172,12 +250,25 @@ function App() {
 
       if (!newData['history'][year][month]) {
         newData['history'][year][month] = {
-          [monthlyExpenseKey]: { ...newData[monthlyExpenseKey] },
-          [addExpenseKey]: { ...newData[addExpenseKey] }
+          [monthlyExpenseKey]: {},
+          [addExpenseKey]: {}
         };
+        newData.budgets.forEach((budget) => {
+          var mergedMonthly = { ...newData['history'][year][month][monthlyExpenseKey] };
+          var mergedAdd = { ...newData['history'][year][month][addExpenseKey] };
+          if(newData['budgets'][budget.eventKey][monthlyExpenseKey]) mergedMonthly = { ...mergedMonthly, ...newData['budgets'][budget.eventKey][monthlyExpenseKey]};
+          if(newData['budgets'][budget.eventKey][addExpenseKey]) mergedAdd = { ...mergedAdd, ...newData['budgets'][budget.eventKey][addExpenseKey]};
+          newData['history'][year][month] = {
+            [monthlyExpenseKey]: { ...mergedMonthly },
+            [addExpenseKey]: { ...mergedAdd }
+          };
+        });
       }
 
-      newData[addExpenseKey] = {};
+      newData.budgets.forEach((budget) => {
+        if(newData['budgets'][budget.eventKey][addExpenseKey]) newData['budgets'][budget.eventKey][addExpenseKey] = {};
+      });
+      
 
       updatedData = newData;
       return newData;
@@ -189,11 +280,12 @@ function App() {
   };
 
   // Remove expense from user data
-  const removeKey = (key, type) => {
+  const removeKey = (key, type, budget) => {
     const newData = { ...userData };
-    if (type === 'Monthly') delete newData[monthlyExpenseKey][key];
-    else if (type === 'One-time') delete newData[addExpenseKey][key];
+    if (type === 'Monthly') delete newData['budgets'][budget][monthlyExpenseKey][key];
+    else if (type === 'One-time') delete newData['budgets'][budget][addExpenseKey][key];
     setUserData(newData);
+    setTabs(newData['budgets']);
     if (userData['email'] !== 'Guest') updateUserByEmail(newData);
   };
 
@@ -210,48 +302,116 @@ function App() {
                 <Button variant="secondary" onClick={handleLogout} className="ml-2">Logout</Button>
               </Col>
             </Row>
+            <Tabs
+              activeKey={activeKey}
+              onSelect={(k) => {
+                if (k === 'add-new-tab') {
+                  addNewTab(); // Call function to add a new tab
+                } else {
+                  setActiveKey(k); // Switch to the selected tab if it's not the add-new-tab
+                }
+              }}
+              className="mb-3"
+            >
 
-            <Row>
-              <Col md={4}>
-                <Summary 
-                  data={userData} 
-                  updateData={saveUserData} 
-                  incomeKey={incomeKey} 
-                  monthlyExpenseKey={monthlyExpenseKey} 
-                  addExpenseKey={addExpenseKey}
-                />
-              </Col>
-            </Row>
+              {extraTabs.map((tab) => (
+                <Tab eventKey={tab.eventKey} title={tab.title} key={tab.eventKey}>
 
-            <Row>
-              <Col>
-                <DataDisplay 
-                  data={userData} 
-                  updateData={saveUserData} 
-                  addToExpenseMap={addToExpenseMap} 
-                  incomeKey={incomeKey}
-                />
-              </Col>
-            </Row>
+                  <Row>
+                    <Col md={11}>
+                      <Summary 
+                        data={tab} 
+                        updateData={saveUserData} 
+                        incomeKey={incomeKey} 
+                        monthlyExpenseKey={monthlyExpenseKey} 
+                        addExpenseKey={addExpenseKey}
+                        activeKey={activeKey}
+                      />
+                    </Col>
+                    <Col>
+                      {tab.eventKey !== 0 ? (
+                        <>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveBudget(tab.eventKey);
+                            }}
+                          >
+                            Remove Budget
+                          </Button>
+                      </>) : (<></>)}
+                    </Col>
+                  </Row>
 
-            {userData[monthlyExpenseKey] && userData[addExpenseKey] && (
-              <Row className="mt-4">
-                <Col>
-                  <ExpenseTable
-                    monthlyExpense={userData[monthlyExpenseKey]}
-                    addExpense={userData[addExpenseKey]}
-                    edit={addToExpenseMap}
-                    remove={removeKey}
-                  />
-                </Col>
-              </Row>
-            )}
+                  <Row>
+                    <Col>
+                      <DataDisplay 
+                        data={tab} 
+                        updateData={saveUserData} 
+                        addToExpenseMap={addToExpenseMap} 
+                        incomeKey={incomeKey}
+                        activeKey={activeKey}
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row className="mt-4">
+                    <Col>
+                      <ExpenseTable
+                        monthlyExpense={tab[monthlyExpenseKey]}
+                        addExpense={tab[addExpenseKey]}
+                        activeKey={activeKey}
+                        edit={addToExpenseMap}
+                        remove={removeKey}
+                      />
+                    </Col>
+                  </Row>
+                </Tab>
+              ))}
+
+              {/* Add New Tab as a tab that acts like a button */}
+              <Tab
+                eventKey="add-new-tab"
+                title={<span style={{ color: 'white' }}>+ Add Budget</span>}
+                tabClassName="bg-primary text-white"
+              />
+            </Tabs>
 
             <Row className="mt-4">
               <Col md={12}>
                 <HistoryDropdown history={userData.history} />
               </Col>
             </Row>
+
+            {/* Modal for adding new budget */}
+            <Modal show={showModal} onHide={() => setShowModal(false)}>
+              <Modal.Header closeButton>
+                <Modal.Title>Add New Budget</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Form>
+                  <Form.Group controlId="formBudgetName">
+                    <Form.Label>Budget Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter budget name"
+                      value={newBudgetName}
+                      onChange={(e) => setNewBudgetName(e.target.value)}
+                    />
+                  </Form.Group>
+                </Form>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowModal(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleAddBudget}>
+                  Add Budget
+                </Button>
+              </Modal.Footer>
+            </Modal>
           </>
         ) : (
           <>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
+const DataDisplay = ({ data, updateData, activeKey, addToExpenseMap, incomeKey}) => {
   const [incomeValue, setIncomeValue] = useState('');
   const [expenseValue, setExpenseValue] = useState('');
   const [expenseName, setExpenseName] = useState('');
@@ -10,7 +10,7 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
   // Update user data income
   const updateIncome = () => {
     if (incomeValue !== '' && incomeValue !== undefined && !isNaN(incomeValue)) {
-      updateData(incomeKey, incomeValue);
+      updateData(incomeKey, incomeValue, activeKey);
       setIncomeValue('');
     }
   };
@@ -28,7 +28,7 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
   // Add new expense to user data
   const addToExpense = () => {
     if (expenseName !== '' && expenseValue !== '' && expenseType !== '' && expenseValue !== undefined && !isNaN(expenseValue)) {
-      addToExpenseMap(expenseName, expenseValue, expenseType);
+      addToExpenseMap(expenseName, expenseValue, expenseType, activeKey);
       setExpenseName('');
       setExpenseValue('');
       setExpenseType('');
@@ -69,29 +69,28 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
 
       <div className="row mb-4">
         Monthly Expense:  &nbsp;
-        <div className="col">
+        <div className="col-12 col-md">
           <input
             type="text"
-            className="form-control"
+            className="form-control mb-2"
             placeholder="Name"
             value={expenseName}
             onChange={e => setExpenseName(e.target.value)}
           />
         </div>
-        <div className="col">
+        <div className="col-12 col-md">
           <input
             type="number"
-            className="form-control"
+            className="form-control mb-2"
             placeholder="Value"
             value={expenseValue}
             onChange={handleExpenseValue}
           />
         </div>
-        <div className="col">
+        <div className="col-12 col-md">
           <select
-            type="text"
-            className="form-select"
-            placeholder="Value"
+            className="form-select mb-2"
+            placeholder="Type"
             value={expenseType}
             onChange={handleExpenseType}
           >
@@ -101,7 +100,7 @@ const DataDisplay = ({ data, updateData, addToExpenseMap, incomeKey}) => {
           </select>
         </div>
         <div className="col-auto">
-        <button className="btn btn-primary" onClick={addToExpense}>Add to Expenses</button>
+          <button className="btn btn-primary" onClick={addToExpense}>Add to Expenses</button>
         </div>
       </div>
     </div>

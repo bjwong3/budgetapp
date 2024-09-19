@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const ExpenseTable = ({ monthlyExpense, addExpense, edit, remove }) => {
+const ExpenseTable = ({ monthlyExpense, addExpense, activeKey, edit, remove }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [editRow, setEditRow] = useState(null);
   const [editKey, setEditKey] = useState(null);
@@ -44,12 +44,12 @@ const ExpenseTable = ({ monthlyExpense, addExpense, edit, remove }) => {
   };
 
   const handleSaveClick = (index, type) => {
-    edit(sortedData[index].key, editValue, type);
+    edit(sortedData[index].key, editValue, type, activeKey);
     setEditRow(null);
   };
 
   const handleRemoveClick = (index, type) => {
-    remove(sortedData[index].key, type)
+    remove(sortedData[index].key, type, activeKey)
   };
 
   return (

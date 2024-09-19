@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}) => {
+const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey, activeKey}) => {
   const [editingIncome, setEditingIncome] = useState(false);
   const [originalIncome, setOriginalIncome] = useState(0);
   const [incomeValue, setIncomeValue] = useState(data[incomeKey]);
@@ -66,7 +66,7 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey}
     } catch (e) {
       parsedValue = incomeValue;
     }
-    updateData(incomeKey, incomeValue)
+    updateData(incomeKey, incomeValue, activeKey)
     setOriginalIncome(0);
     setEditingIncome(false);
   };
