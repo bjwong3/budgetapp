@@ -226,10 +226,11 @@ function App() {
         if(newData['budgets'][budget][monthlyExpenseKey] === undefined) newData['budgets'][budget][monthlyExpenseKey] = {};
         newData['budgets'][budget][monthlyExpenseKey][key] = value;
       }
-      else if (type === 'Additional') {
+      else if (type === 'One-time') {
         if(newData['budgets'][budget][addExpenseKey] === undefined) newData['budgets'][budget][addExpenseKey] = {};
         newData['budgets'][budget][addExpenseKey][key] = value;
       } 
+      setTabs(newData['budgets']);
       if (userData['email'] !== 'Guest') updateUserByEmail(newData);
       return newData;
     });

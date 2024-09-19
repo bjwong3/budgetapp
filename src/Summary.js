@@ -104,16 +104,16 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey,
           <span
             onClick={handleIncomeClick}
           >
-            {data.income}
+            {data.income.toFixed(2)}
           </span>
         )}</h2>
         
       </div>
-      <h2 class='text-danger'>Total Expenses: ${sumTotalExpenses()}</h2>
-      <h2 class='text-dark'>Monthly Expenses: ${sumMonthlyExpenses()}</h2>
-      <h2 class='text-dark'>Other Expenses: ${sumOtherExpenses()}</h2>
+      <h2 class='text-danger'>Total Expenses: ${sumTotalExpenses().toFixed(2)}</h2>
+      <h2 class='text-dark'>Monthly Expenses: ${sumMonthlyExpenses().toFixed(2)}</h2>
+      <h2 class='text-dark'>Other Expenses: ${sumOtherExpenses().toFixed(2)}</h2>
       <div className="mb-2">
-        <h2 class={`${getHeaderClass()}`} style={{ display: 'inline-block'}}>Leftover Cash: ${calculateNetValue()}</h2>
+        <h2 class={`${getHeaderClass()}`} style={{ display: 'inline-block'}}>Leftover Cash: ${calculateNetValue().toFixed(2)}</h2>
       </div>
       
     </div>

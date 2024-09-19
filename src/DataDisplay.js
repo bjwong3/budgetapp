@@ -17,7 +17,8 @@ const DataDisplay = ({ data, updateData, activeKey, addToExpenseMap, incomeKey})
 
   const handleIncomeValue = (e) => {
     const value = e.target.value
-    if (value !== "") {
+    const regex = /^\d+(\.\d{0,2})?$/;
+    if (value !== "" && regex.test(value)) {
         setIncomeValue(parseFloat(value));
     }
     else if (value === ""){
@@ -37,7 +38,8 @@ const DataDisplay = ({ data, updateData, activeKey, addToExpenseMap, incomeKey})
 
   const handleExpenseValue = (e) => {
     const value = e.target.value
-    if (value !== "") {
+    const regex = /^\d+(\.\d{0,2})?$/;
+    if (value !== "" && regex.test(value)) {
         setExpenseValue(parseFloat(value));
     }
     else if (value === ""){
