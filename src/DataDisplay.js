@@ -98,7 +98,7 @@ const DataDisplay = ({ data, updateData, activeKey, addToExpenseMap, incomeKey})
           >
             <option value="" disabled>Select an expense type</option>
             <option value="Monthly">Monthly</option>
-            <option value="Additional">One-time</option>
+            <option value="One-time">One-time</option>
           </select>
         </div>
         <div className="col-auto">
