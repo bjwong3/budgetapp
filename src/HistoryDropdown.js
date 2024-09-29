@@ -2,9 +2,19 @@ import React, { useState } from 'react';
 import { Accordion, Card, Form, Row, Col, Table } from 'react-bootstrap';
 import { FaCalendarAlt, FaListAlt } from 'react-icons/fa'; // Icons for better UI
 
-function HistoryDropdown({ history }) {
+function HistoryDropdown({ getHistory }) {
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(null);
+  const [history, setHistory] = useState({});
+
+  const fetchHistory = async() => {
+    if(Object.keys(history).length === 0){
+      console.log('Retrieving history data...');
+      const newData = await getHistory();
+      await setHistory(newData['history']);
+    }
+  };
+
 
   // Helper function to convert month number to month name
   const getMonthName = (monthNumber) => {
@@ -60,9 +70,9 @@ function HistoryDropdown({ history }) {
   };
 
   return (
-    <Accordion defaultActiveKey="0" className="mb-4">
+    <Accordion className="mb-4">
       <Accordion.Item eventKey="0">
-        <Accordion.Header>
+        <Accordion.Header onClick={fetchHistory}>
           <h4>View Historical Data</h4>
         </Accordion.Header>
         <Accordion.Body>

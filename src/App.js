@@ -23,8 +23,7 @@ function App() {
       }
     ],
     lastAccessedYear: 0,
-    lastAccessedMonth: 1,
-    history: {}
+    lastAccessedMonth: 1
   };
 
   const [user, setUser] = useState(Cookies.load('userEmail') || null);
@@ -53,6 +52,21 @@ function App() {
     }
   };
 
+  // Function to fetch history data by email
+  const fetchHistoryByEmail = async () => {
+    try {
+      const response = await axios.get(`https://budgetapp-server.vercel.app/api/history/${user}`);
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return null; // History not found
+      } else {
+        console.error('Error fetching history:', error);
+        throw error;
+      }
+    }
+  };
+
   // Function to update user data by email
   const updateUserByEmail = async (data) => {
     try {
@@ -64,12 +78,30 @@ function App() {
     }
   };
 
+  // Function to update history data by email
+  const updateHistoryByEmail = async (data) => {
+    try {
+      const response = await axios.put(`https://budgetapp-server.vercel.app/api/history/${user}`, data);
+    } catch (error) {
+      console.error('Error updating history:', error);
+    }
+  };
+
   // Function to create a new user
   const createNewUser = async (data) => {
     try {
       await axios.post(`https://budgetapp-server.vercel.app/api/users`, data);
     } catch (error) {
       console.error('Error adding user:', error);
+    }
+  };
+
+  // Function to create a new history
+  const createNewHistory = async (data) => {
+    try {
+      await axios.post(`https://budgetapp-server.vercel.app/api/history`, data);
+    } catch (error) {
+      console.error('Error adding history:', error);
     }
   };
 
@@ -184,9 +216,13 @@ function App() {
         ],
         lastAccessedYear: date.getFullYear(),
         lastAccessedMonth: date.getMonth() + 1,
+      };
+      const newHistory = {
+        email: email,
         history: {}
       };
       await createNewUser(newData);
+      await createNewHistory(newHistory);
       setUserData(newData);
       setTabs(newData['budgets']);
     }
@@ -219,16 +255,24 @@ function App() {
     if (userData['email'] !== 'Guest') updateUserByEmail(newData);
   };
 
-  const addToExpenseMap = async (key, value, type, budget) => {
+  const addToExpenseMap = async (key, value, type, comment, budget) => {
     setUserData((prevData) => {
       const newData = { ...prevData };
       if (type === 'Monthly') {
-        if(newData['budgets'][budget][monthlyExpenseKey] === undefined) newData['budgets'][budget][monthlyExpenseKey] = {};
-        newData['budgets'][budget][monthlyExpenseKey][key] = value;
+        if(newData['budgets'][budget][monthlyExpenseKey] === undefined) {
+          newData['budgets'][budget][monthlyExpenseKey] = {};
+          newData['budgets'][budget][monthlyExpenseKey][key] = {value: 0, comment: ''};
+        }
+        newData['budgets'][budget][monthlyExpenseKey][key]['value'] = value;
+        newData['budgets'][budget][monthlyExpenseKey][key]['comment'] = comment;
       }
       else if (type === 'One-time') {
-        if(newData['budgets'][budget][addExpenseKey] === undefined) newData['budgets'][budget][addExpenseKey] = {};
-        newData['budgets'][budget][addExpenseKey][key] = value;
+        if(newData['budgets'][budget][addExpenseKey] === undefined) {
+          newData['budgets'][budget][addExpenseKey] = {};
+          newData['budgets'][budget][addExpenseKey][key] = {value: 0, comment: ''};
+        }
+        newData['budgets'][budget][addExpenseKey][key]['value'] = value;
+        newData['budgets'][budget][addExpenseKey][key]['comment'] = comment;
       } 
       setTabs(newData['budgets']);
       if (userData['email'] !== 'Guest') updateUserByEmail(newData);
@@ -239,27 +283,39 @@ function App() {
   // Function to move data to history
   const moveToHistory = async () => {
     let updatedData;
+    let historyData = await fetchHistoryByEmail(user);
 
     setUserData((prevData) => {
       const newData = { ...prevData };
       const year = newData['lastAccessedYear'];
       const month = newData['lastAccessedMonth'];
+      
+      
 
-      if (!newData['history'][year]) {
-        newData['history'][year] = {};
+      if (!historyData['history'][year]) {
+        historyData['history'][year] = {};
       }
 
-      if (!newData['history'][year][month]) {
-        newData['history'][year][month] = {
+      if (!historyData['history'][year][month]) {
+        historyData['history'][year][month] = {
           [monthlyExpenseKey]: {},
           [addExpenseKey]: {}
         };
         newData.budgets.forEach((budget) => {
-          var mergedMonthly = { ...newData['history'][year][month][monthlyExpenseKey] };
-          var mergedAdd = { ...newData['history'][year][month][addExpenseKey] };
-          if(newData['budgets'][budget.eventKey][monthlyExpenseKey]) mergedMonthly = { ...mergedMonthly, ...newData['budgets'][budget.eventKey][monthlyExpenseKey]};
-          if(newData['budgets'][budget.eventKey][addExpenseKey]) mergedAdd = { ...mergedAdd, ...newData['budgets'][budget.eventKey][addExpenseKey]};
-          newData['history'][year][month] = {
+          var mergedMonthly = { ...historyData['history'][year][month][monthlyExpenseKey] };
+          var mergedAdd = { ...historyData['history'][year][month][addExpenseKey] };
+          if(newData['budgets'][budget.eventKey][monthlyExpenseKey]) {
+            Object.keys(newData['budgets'][budget.eventKey][monthlyExpenseKey]).forEach((key) => {
+              console.log(key);
+              mergedMonthly[key] = newData['budgets'][budget.eventKey][monthlyExpenseKey][key]['value'];
+            })
+          } 
+          if(newData['budgets'][budget.eventKey][addExpenseKey]) {
+            Object.keys(newData['budgets'][budget.eventKey][addExpenseKey]).forEach((key) => {
+              mergedAdd[key] = newData['budgets'][budget.eventKey][addExpenseKey][key]['value'];
+            })
+          }
+          historyData['history'][year][month] = {
             [monthlyExpenseKey]: { ...mergedMonthly },
             [addExpenseKey]: { ...mergedAdd }
           };
@@ -276,7 +332,7 @@ function App() {
     });
 
     if (updatedData && updatedData['email'] !== 'Guest') {
-      await updateUserByEmail(updatedData);
+      await updateHistoryByEmail(historyData);
     }
   };
 
@@ -382,7 +438,7 @@ function App() {
 
             <Row className="mt-4">
               <Col md={12}>
-                <HistoryDropdown history={userData.history} />
+                <HistoryDropdown getHistory={fetchHistoryByEmail} />
               </Col>
             </Row>
 

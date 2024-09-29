@@ -29,7 +29,7 @@ const DataDisplay = ({ data, updateData, activeKey, addToExpenseMap, incomeKey})
   // Add new expense to user data
   const addToExpense = () => {
     if (expenseName !== '' && expenseValue !== '' && expenseType !== '' && expenseValue !== undefined && !isNaN(expenseValue)) {
-      addToExpenseMap(expenseName, expenseValue, expenseType, activeKey);
+      addToExpenseMap(expenseName, expenseValue, expenseType, '', activeKey);
       setExpenseName('');
       setExpenseValue('');
       setExpenseType('');
