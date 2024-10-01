@@ -351,7 +351,7 @@ function App() {
       <Container className="mt-4">
         {user ? (
           <>
-            <Row className="mb-4">
+            <Row className="mb-4 justify-content-between">
               <Col>
                 <h2>Welcome, {user}!</h2>
               </Col>
@@ -475,10 +475,12 @@ function App() {
             <Row className="justify-content-center">
               <Col md={6} className="text-center">
                 <h2>Login</h2>
-                <GoogleLogin
-                  onSuccess={handleGoogleLoginSuccess}
-                  onError={handleGoogleLoginError}
-                />
+                <div className="d-flex justify-content-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleLoginSuccess}
+                    onError={handleGoogleLoginError}
+                  />
+                </div>
                 <Button onClick={handleGuestSignIn} variant="secondary" className="mt-3">
                   Sign In Without Account
                 </Button>
