@@ -286,54 +286,53 @@ function App() {
 
   // Function to move data to history
   const moveToHistory = async () => {
-    let updatedData;
-    let historyData = await fetchHistoryByEmail(user);
+    if (await fetchHistoryByEmail(user)) {
+      let updatedData;
+      let historyData = await fetchHistoryByEmail(user);
+      setUserData((prevData) => {
+        const newData = { ...prevData };
+        const year = newData['lastAccessedYear'];
+        const month = newData['lastAccessedMonth'];
 
-    setUserData((prevData) => {
-      const newData = { ...prevData };
-      const year = newData['lastAccessedYear'];
-      const month = newData['lastAccessedMonth'];
+        if (!historyData['history'][year]) {
+          historyData['history'][year] = {};
+        }
 
-      if (!historyData['history'][year]) {
-        historyData['history'][year] = {};
-      }
-
-      if (!historyData['history'][year][month]) {
-        historyData['history'][year][month] = {
-          [monthlyExpenseKey]: {},
-          [addExpenseKey]: {}
-        };
-        newData.budgets.forEach((budget) => {
-          var mergedMonthly = { ...historyData['history'][year][month][monthlyExpenseKey] };
-          var mergedAdd = { ...historyData['history'][year][month][addExpenseKey] };
-          if(newData['budgets'][budget.eventKey][monthlyExpenseKey]) {
-            Object.keys(newData['budgets'][budget.eventKey][monthlyExpenseKey]).forEach((key) => {
-              mergedMonthly[key] = newData['budgets'][budget.eventKey][monthlyExpenseKey][key]['value'];
-            })
-          } 
-          if(newData['budgets'][budget.eventKey][addExpenseKey]) {
-            Object.keys(newData['budgets'][budget.eventKey][addExpenseKey]).forEach((key) => {
-              mergedAdd[key] = newData['budgets'][budget.eventKey][addExpenseKey][key]['value'];
-            })
-          }
+        if (!historyData['history'][year][month]) {
           historyData['history'][year][month] = {
-            [monthlyExpenseKey]: { ...mergedMonthly },
-            [addExpenseKey]: { ...mergedAdd }
+            [monthlyExpenseKey]: {},
+            [addExpenseKey]: {}
           };
+          newData.budgets.forEach((budget) => {
+            var mergedMonthly = { ...historyData['history'][year][month][monthlyExpenseKey] };
+            var mergedAdd = { ...historyData['history'][year][month][addExpenseKey] };
+            if(newData['budgets'][budget.eventKey][monthlyExpenseKey]) {
+              Object.keys(newData['budgets'][budget.eventKey][monthlyExpenseKey]).forEach((key) => {
+                mergedMonthly[key] = newData['budgets'][budget.eventKey][monthlyExpenseKey][key]['value'];
+              })
+            } 
+            if(newData['budgets'][budget.eventKey][addExpenseKey]) {
+              Object.keys(newData['budgets'][budget.eventKey][addExpenseKey]).forEach((key) => {
+                mergedAdd[key] = newData['budgets'][budget.eventKey][addExpenseKey][key]['value'];
+              })
+            }
+            historyData['history'][year][month] = {
+              [monthlyExpenseKey]: { ...mergedMonthly },
+              [addExpenseKey]: { ...mergedAdd }
+            };
+          });
+        }
+
+        console.log('Transferring data to history');
+        newData.budgets.forEach((budget) => {
+          if(newData['budgets'][budget.eventKey][addExpenseKey]) newData['budgets'][budget.eventKey][addExpenseKey] = {};
         });
-      }
+        
 
-      console.log('Transferring data to history');
-      newData.budgets.forEach((budget) => {
-        if(newData['budgets'][budget.eventKey][addExpenseKey]) newData['budgets'][budget.eventKey][addExpenseKey] = {};
+        updatedData = newData;
+        return newData;
       });
-      
 
-      updatedData = newData;
-      return newData;
-    });
-
-    if (updatedData && updatedData['email'] !== 'Guest') {
       await updateHistoryByEmail(historyData);
     }
 
