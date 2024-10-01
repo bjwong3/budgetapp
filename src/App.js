@@ -32,6 +32,7 @@ function App() {
   const [activeKey, setActiveKey] = useState(0);
   const [showModal, setShowModal] = useState(false); // Modal visibility state
   const [newBudgetName, setNewBudgetName] = useState(''); // New budget name state
+  const [updates, setUpdates] = useState(0); // Modal visibility state
 
   const incomeKey = "income";
   const monthlyExpenseKey = "monthlyExpense";
@@ -154,15 +155,22 @@ function App() {
     const date = new Date();
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
+    
+    // Fetch user data first
     const data = await fetchUserByEmail(user);
-
-    if (data["lastAccessedYear"] < year || data["lastAccessedMonth"] < month) {
-      await moveToHistory(); // Move to history if needed
+  
+    // Only move to history if the last accessed year/month is different
+    if (data.lastAccessedYear < year || data.lastAccessedMonth < month) {
+      // Await the completion of moveToHistory
+      await moveToHistory(); 
     }
-
+  
+    // Update the last accessed date after history movement is done
     setUserData((prevData) => {
       const newData = { ...prevData, lastAccessedYear: year, lastAccessedMonth: month };
-      if (newData['email'] !== 'Guest') updateUserByEmail(newData);
+      
+      // Update user data in the database after history movement
+      if (newData.email !== 'Guest') updateUserByEmail(newData);
       return newData;
     });
   };
@@ -282,55 +290,55 @@ function App() {
 
   // Function to move data to history
   const moveToHistory = async () => {
-    let updatedData;
+    // Fetch current history data
     let historyData = await fetchHistoryByEmail(user);
-
-    setUserData((prevData) => {
-      const newData = { ...prevData };
-      const year = newData['lastAccessedYear'];
-      const month = newData['lastAccessedMonth'];
-      
-      
-
-      if (!historyData['history'][year]) {
-        historyData['history'][year] = {};
-      }
-
-      if (!historyData['history'][year][month]) {
-        historyData['history'][year][month] = {
-          [monthlyExpenseKey]: {},
-          [addExpenseKey]: {}
-        };
-        newData.budgets.forEach((budget) => {
-          var mergedMonthly = { ...historyData['history'][year][month][monthlyExpenseKey] };
-          var mergedAdd = { ...historyData['history'][year][month][addExpenseKey] };
-          if(newData['budgets'][budget.eventKey][monthlyExpenseKey]) {
-            Object.keys(newData['budgets'][budget.eventKey][monthlyExpenseKey]).forEach((key) => {
-              mergedMonthly[key] = newData['budgets'][budget.eventKey][monthlyExpenseKey][key]['value'];
-            })
-          } 
-          if(newData['budgets'][budget.eventKey][addExpenseKey]) {
-            Object.keys(newData['budgets'][budget.eventKey][addExpenseKey]).forEach((key) => {
-              mergedAdd[key] = newData['budgets'][budget.eventKey][addExpenseKey][key]['value'];
-            })
-          }
-          historyData['history'][year][month] = {
-            [monthlyExpenseKey]: { ...mergedMonthly },
-            [addExpenseKey]: { ...mergedAdd }
+  
+    // Update the userData and prepare the data to be moved to history
+    const updatedData = await new Promise((resolve) => {
+      setUserData((prevData) => {
+        const newData = { ...prevData };
+        const year = newData.lastAccessedYear;
+        const month = newData.lastAccessedMonth;
+  
+        // Prepare history object if not present for the given year and month
+        if (!historyData.history[year]) {
+          historyData.history[year] = {};
+        }
+        if (!historyData.history[year][month]) {
+          historyData.history[year][month] = {
+            [monthlyExpenseKey]: {},
+            [addExpenseKey]: {}
           };
+        }
+  
+        // Move monthly and one-time expenses into history
+        newData.budgets.forEach((budget) => {
+          if (newData.budgets[budget.eventKey][monthlyExpenseKey]) {
+            Object.keys(newData.budgets[budget.eventKey][monthlyExpenseKey]).forEach((key) => {
+              historyData.history[year][month][monthlyExpenseKey][key] =
+                newData.budgets[budget.eventKey][monthlyExpenseKey][key].value;
+            });
+          }
+          if (newData.budgets[budget.eventKey][addExpenseKey]) {
+            Object.keys(newData.budgets[budget.eventKey][addExpenseKey]).forEach((key) => {
+              historyData.history[year][month][addExpenseKey][key] =
+                newData.budgets[budget.eventKey][addExpenseKey][key].value;
+            });
+          }
         });
-      }
-
-      newData.budgets.forEach((budget) => {
-        if(newData['budgets'][budget.eventKey][addExpenseKey]) newData['budgets'][budget.eventKey][addExpenseKey] = {};
+  
+        // Clear the one-time expenses for the current budget
+        newData.budgets.forEach((budget) => {
+          newData.budgets[budget.eventKey][addExpenseKey] = {};
+        });
+  
+        resolve(newData);
+        return newData;
       });
-      
-
-      updatedData = newData;
-      return newData;
     });
-
-    if (updatedData && updatedData['email'] !== 'Guest') {
+  
+    // Update the history in the database after updating userData
+    if (updatedData.email !== 'Guest') {
       await updateHistoryByEmail(historyData);
     }
   };
@@ -356,6 +364,7 @@ function App() {
               </Col>
               <Col md={1} className="text-right">
                 <Button variant="secondary" onClick={handleLogout} className="ml-2">Logout</Button>
+                <Button variant="secondary" onClick={moveToHistory} className="ml-2">History</Button>
               </Col>
             </Row>
             <Tabs
