@@ -42,7 +42,33 @@ function HistoryDropdown({ getHistory }) {
 
   // Helper function to render expense table and calculate totals
   const renderExpenseTable = (expenses) => {
-    const totalExpenses = Object.values(expenses).reduce((acc, curr) => acc + curr, 0); // Calculate total expenses
+    if(expenses !== undefined && expenses !== null && Object.keys(expenses).length > 0) {
+      const totalExpenses = Object.values(expenses).reduce((acc, curr) => acc + curr, 0); // Calculate total expenses
+      return (
+        <>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(expenses).map((key) => (
+                <tr key={key}>
+                  <td>{key}</td>
+                  <td>${expenses[key].toFixed(2)}</td>
+                </tr>
+              ))}
+              <tr className="font-weight-bold">
+                <td style={{color: "blue"}}>Total</td>
+                <td style={{color: "blue"}}>${totalExpenses.toFixed(2)}</td> {/* Display total amount */}
+              </tr>
+            </tbody>
+          </Table>
+        </>
+      );
+    }
     return (
       <>
         <Table striped bordered hover>
@@ -53,15 +79,9 @@ function HistoryDropdown({ getHistory }) {
             </tr>
           </thead>
           <tbody>
-            {Object.keys(expenses).map((key) => (
-              <tr key={key}>
-                <td>{key}</td>
-                <td>${expenses[key].toFixed(2)}</td>
-              </tr>
-            ))}
             <tr className="font-weight-bold">
               <td style={{color: "blue"}}>Total</td>
-              <td style={{color: "blue"}}>${totalExpenses.toFixed(2)}</td> {/* Display total amount */}
+              <td style={{color: "blue"}}>$0.00</td> {/* Display total amount */}
             </tr>
           </tbody>
         </Table>
