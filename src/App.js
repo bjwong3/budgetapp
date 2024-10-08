@@ -270,7 +270,7 @@ function App() {
         if(newData['budgets'][budget][monthlyExpenseKey] === undefined) {
           newData['budgets'][budget][monthlyExpenseKey] = {};
         }
-        if(newData['budgets'][budget][addExpenseKey][key] === undefined) {
+        if(newData['budgets'][budget][monthlyExpenseKey][key] === undefined) {
           newData['budgets'][budget][monthlyExpenseKey][key] = {value: 0, comment: ''};
         }
         newData['budgets'][budget][monthlyExpenseKey][key]['value'] = value;
