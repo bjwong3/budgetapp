@@ -269,6 +269,8 @@ function App() {
       if (type === 'Monthly') {
         if(newData['budgets'][budget][monthlyExpenseKey] === undefined) {
           newData['budgets'][budget][monthlyExpenseKey] = {};
+        }
+        if(newData['budgets'][budget][addExpenseKey][key] === undefined) {
           newData['budgets'][budget][monthlyExpenseKey][key] = {value: 0, comment: ''};
         }
         newData['budgets'][budget][monthlyExpenseKey][key]['value'] = value;
@@ -277,6 +279,8 @@ function App() {
       else if (type === 'One-time') {
         if(newData['budgets'][budget][addExpenseKey] === undefined) {
           newData['budgets'][budget][addExpenseKey] = {};
+        }
+        if(newData['budgets'][budget][addExpenseKey][key] === undefined) {
           newData['budgets'][budget][addExpenseKey][key] = {value: 0, comment: ''};
         }
         newData['budgets'][budget][addExpenseKey][key]['value'] = value;
@@ -364,7 +368,6 @@ function App() {
               </Col>
               <Col md={1} className="text-right">
                 <Button variant="secondary" onClick={handleLogout} className="ml-2">Logout</Button>
-                <Button variant="secondary" onClick={moveToHistory} className="ml-2">History</Button>
               </Col>
             </Row>
             <Tabs
