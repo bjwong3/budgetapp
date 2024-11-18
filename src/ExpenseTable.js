@@ -1,139 +1,211 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useState, useEffect } from 'react';
+import { useDrag, useDrop, DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
-const ExpenseTable = ({ monthlyExpense, addExpense, activeKey, edit, remove }) => {
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [editRow, setEditRow] = useState(null);
-  const [editKey, setEditKey] = useState(null);
-  const [editValue, setEditValue] = useState(0);
-  const [editComment, setEditComment] = useState('');
+const ItemType = {
+  ROW: 'row',
+};
 
-  if(!monthlyExpense) monthlyExpense = {};
-  if(!addExpense) addExpense = {};
-  const mergedData = [
-    ...Object.keys(monthlyExpense).map(key => ({ key, value: monthlyExpense[key]['value'], type: 'Monthly', comment: monthlyExpense[key]['comment']})),
-    ...Object.keys(addExpense).map(key => ({ key, value: addExpense[key]['value'], type: 'One-time', comment: addExpense[key]['comment']})),
-  ];
+const DraggableRow = ({ item, index, moveRow, children }) => {
+  const ref = React.useRef(null);
 
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+  const [, drop] = useDrop({
+    accept: ItemType.ROW,
+    hover(draggedItem) {
+      if (draggedItem.index !== index) {
+        moveRow(draggedItem.index, index);
+        draggedItem.index = index;
+      }
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemType.ROW,
+    item: { index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  drag(drop(ref));
+
+  return (
+    <tr
+      ref={ref}
+      style={{
+        opacity: isDragging ? 0.7 : 1,
+        backgroundColor: isDragging ? '#f8f9fa' : 'transparent',
+        cursor: 'move',
+      }}
+    >
+      {/* Drag handle cell */}
+      <td
+        style={{
+          width: '30px',
+          textAlign: 'center',
+          verticalAlign: 'middle',
+        }}
+      >
+        <div ref={drag} style={{ cursor: 'grab' }}>
+          <span style={{ fontSize: '1.5em', lineHeight: '1' }}>☰</span>
+        </div>
+      </td>
+      {children}
+    </tr>
+  );
+};
+
+const ExpenseTable = ({ userData, activeKey, edit, remove, updateUser }) => {
+  const [monthlyExpenses, setMonthlyExpenses] = useState([]);
+  const [oneTimeExpenses, setOneTimeExpenses] = useState([]);
+
+  useEffect(() => {
+    const activeBudget = userData.budgets[activeKey] || {};
+    const monthly = Object.keys(activeBudget.monthlyExpense || {}).map((key) => ({
+      key,
+      value: activeBudget.monthlyExpense[key]?.value || 0,
+      comment: activeBudget.monthlyExpense[key]?.comment || '',
+    }));
+    const oneTime = Object.keys(activeBudget.addExpense || {}).map((key) => ({
+      key,
+      value: activeBudget.addExpense[key]?.value || 0,
+      comment: activeBudget.addExpense[key]?.comment || '',
+    }));
+    setMonthlyExpenses(monthly);
+    setOneTimeExpenses(oneTime);
+  }, [userData, activeKey]);
+
+  const moveRow = (fromIndex, toIndex, setExpenses, expenses, type) => {
+    const updatedExpenses = [...expenses];
+    const [movedItem] = updatedExpenses.splice(fromIndex, 1);
+    updatedExpenses.splice(toIndex, 0, movedItem);
+    setExpenses(updatedExpenses);
+    saveUpdatedOrder(updatedExpenses, type);
+  };
+
+  const saveUpdatedOrder = (updatedExpenses, type) => {
+    const activeBudget = userData.budgets[activeKey];
+    const updatedUserData = { ...userData };
+
+    if (type === 'Monthly') {
+      const monthlyExpense = updatedExpenses.reduce((acc, item) => {
+        acc[item.key] = { value: item.value, comment: item.comment };
+        return acc;
+      }, {});
+      updatedUserData.budgets[activeKey] = {
+        ...activeBudget,
+        monthlyExpense,
+      };
+    } else if (type === 'One-time') {
+      const addExpense = updatedExpenses.reduce((acc, item) => {
+        acc[item.key] = { value: item.value, comment: item.comment };
+        return acc;
+      }, {});
+      updatedUserData.budgets[activeKey] = {
+        ...activeBudget,
+        addExpense,
+      };
     }
-    setSortConfig({ key, direction });
-  };
 
-  const sortedData = React.useMemo(() => {
-    if (sortConfig.key) {
-      return [...mergedData].sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return mergedData;
-  }, [mergedData, sortConfig]);
-
-  const handleEditClick = (index, key, value, comment) => {
-    setEditRow(index);
-    setEditKey(key);
-    setEditValue(value);
-    setEditComment(comment);
-  };
-
-  const handleSaveClick = (index, type) => {
-    edit(sortedData[index].key, parseFloat(editValue), type, editComment, activeKey);
-    setEditRow(null);
-  };
-
-  const handleRemoveClick = (index, type) => {
-    remove(sortedData[index].key, type, activeKey)
+    updateUser(updatedUserData);
   };
 
   return (
-    <div className="container mt-4">
-      <h2>List of Expenses</h2>
-
-      {/* Responsive table container */}
+    <DndProvider backend={HTML5Backend}>
       <div className="table-responsive">
-        <table className="table table-striped" style={{ tableLayout: 'auto', wordWrap: 'break-word' }}>
+        {/* Monthly Expenses Table */}
+        <h3>Monthly Expenses</h3>
+        <table className="table table-striped">
           <thead>
             <tr>
-              <th onClick={() => handleSort('key')} style={{ cursor: 'pointer' }}>
-                Name {sortConfig.key === 'key' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-              </th>
-              <th onClick={() => handleSort('value')} style={{ cursor: 'pointer' }}>
-                Amount {sortConfig.key === 'value' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-              </th>
-              <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
-                Type {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-              </th>
+              <th></th> {/* Placeholder for drag handle */}
+              <th>Name</th>
+              <th>Amount</th>
               <th>Comment</th>
-              <th className="d-flex justify-content-center">Actions</th>
+              <th style={{ textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((item, index) => (
-              <tr key={index}>
+            {monthlyExpenses.map((item, index) => (
+              <DraggableRow
+                key={item.key}
+                item={item}
+                index={index}
+                moveRow={(from, to) =>
+                  moveRow(from, to, setMonthlyExpenses, monthlyExpenses, 'Monthly')
+                }
+              >
                 <td>{item.key}</td>
-                <td>
-                  {editRow === index ? (
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                    />
-                  ) : (
-                    typeof item.value === 'object' && item.value !== null ? parseFloat(item.value) : item.value
-                  )}
-                </td>
-                <td>{item.type}</td>
-                <td>
-                  {editRow === index ? (
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={editComment}
-                      onChange={(e) => setEditComment(e.target.value)}
-                    />
-                  ) : (
-                    typeof item.comment === 'object' && item.comment !== null ? JSON.stringify(item.comment) : item.comment
-                  )}
-                </td>
-                <td>
+                <td>{item.value}</td>
+                <td>{item.comment}</td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                   <div className="d-flex justify-content-center">
-                    {editRow === index ? (
-                      <>
-                        <button className="btn btn-success btn-sm" onClick={() => handleSaveClick(index, item.type)}>
-                          Save
-                        </button>
-                        <button className="btn btn-secondary btn-sm ms-2" onClick={() => setEditRow(null)}>
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button className="btn btn-primary btn-sm" onClick={() => handleEditClick(index, item.key, item.value, item.comment)}>
-                          Edit
-                        </button>
-                        <button className="btn btn-danger btn-sm ms-2" onClick={() => handleRemoveClick(index, item.type)}>
-                          Remove
-                        </button>
-                      </>
-                    )}
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => edit(item.key, item.value, 'Monthly', item.comment, activeKey)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm ms-2"
+                      onClick={() => remove(item.key, 'Monthly', activeKey)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 </td>
-              </tr>
+              </DraggableRow>
+            ))}
+          </tbody>
+        </table>
+
+        {/* One-Time Expenses Table */}
+        <h3>One-Time Expenses</h3>
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th></th> {/* Placeholder for drag handle */}
+              <th>Name</th>
+              <th>Amount</th>
+              <th>Comment</th>
+              <th style={{ textAlign: 'center' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {oneTimeExpenses.map((item, index) => (
+              <DraggableRow
+                key={item.key}
+                item={item}
+                index={index}
+                moveRow={(from, to) =>
+                  moveRow(from, to, setOneTimeExpenses, oneTimeExpenses, 'One-time')
+                }
+              >
+                <td>{item.key}</td>
+                <td>{item.value}</td>
+                <td>{item.comment}</td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                  <div className="d-flex justify-content-center">
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => edit(item.key, item.value, 'One-time', item.comment, activeKey)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm ms-2"
+                      onClick={() => remove(item.key, 'One-time', activeKey)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </td>
+              </DraggableRow>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </DndProvider>
   );
 };
 
