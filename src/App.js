@@ -428,6 +428,22 @@ function App() {
                   <Row className="mt-4">
                     <Col>
                       <ExpenseTable
+                        type={"Monthly"}
+                        userData={userData}
+                        monthlyExpense={tab[monthlyExpenseKey]}
+                        addExpense={tab[addExpenseKey]}
+                        activeKey={activeKey}
+                        edit={addToExpenseMap}
+                        remove={removeKey}
+                        updateUser={updateUserByEmail}
+                      />
+                    </Col>
+                  </Row>
+
+                  <Row className="mt-4">
+                    <Col>
+                      <ExpenseTable
+                        type={"One-time"}
                         userData={userData}
                         monthlyExpense={tab[monthlyExpenseKey]}
                         addExpense={tab[addExpenseKey]}
