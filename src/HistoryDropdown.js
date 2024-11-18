@@ -43,13 +43,15 @@ function HistoryDropdown({ getHistory }) {
   // Helper function to render expense table and calculate totals
   const renderExpenseTable = (expenses) => {
     if(expenses !== undefined && expenses !== null && Object.keys(expenses).length > 0) {
-      const totalExpenses = Object.values(expenses).reduce((acc, curr) => acc + curr, 0); // Calculate total expenses
+      const totalExpenses = Object.values(expenses).reduce((acc, curr) => acc + curr.value, 0); // Calculate total expenses
       return (
         <>
           <Table striped bordered hover>
             <thead>
               <tr>
                 <th>Item</th>
+                <th>Expense Date</th>
+                <th>Input Date</th>
                 <th>Amount</th>
               </tr>
             </thead>
@@ -57,11 +59,15 @@ function HistoryDropdown({ getHistory }) {
               {Object.keys(expenses).map((key) => (
                 <tr key={key}>
                   <td>{key}</td>
-                  <td>${expenses[key].toFixed(2)}</td>
+                  <td>{expenses[key]['expenseDate']}</td>
+                  <td>{expenses[key]['inputDate']}</td>
+                  <td>${expenses[key]['value'].toFixed(2)}</td>
                 </tr>
               ))}
               <tr className="font-weight-bold">
                 <td style={{color: "blue"}}>Total</td>
+                <td></td>
+                <td></td>
                 <td style={{color: "blue"}}>${totalExpenses.toFixed(2)}</td> {/* Display total amount */}
               </tr>
             </tbody>
@@ -75,12 +81,16 @@ function HistoryDropdown({ getHistory }) {
           <thead>
             <tr>
               <th>Item</th>
+              <th>Expense Date</th>
+              <th>Input Date</th>
               <th>Amount</th>
             </tr>
           </thead>
           <tbody>
             <tr className="font-weight-bold">
               <td style={{color: "blue"}}>Total</td>
+              <td></td>
+              <td></td>
               <td style={{color: "blue"}}>$0.00</td> {/* Display total amount */}
             </tr>
           </tbody>

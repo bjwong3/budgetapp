@@ -263,28 +263,33 @@ function App() {
     if (userData['email'] !== 'Guest') updateUserByEmail(newData);
   };
 
-  const addToExpenseMap = async (key, value, type, comment, budget) => {
+  const addToExpenseMap = async (key, value, type, comment, expenseDate, inputDate, budget) => {
     setUserData((prevData) => {
       const newData = { ...prevData };
+      const newDate = new Date().toISOString().split("T")[0];
       if (type === 'Monthly') {
         if(newData['budgets'][budget][monthlyExpenseKey] === undefined) {
           newData['budgets'][budget][monthlyExpenseKey] = {};
         }
         if(newData['budgets'][budget][monthlyExpenseKey][key] === undefined) {
-          newData['budgets'][budget][monthlyExpenseKey][key] = {value: 0, comment: ''};
+          newData['budgets'][budget][monthlyExpenseKey][key] = {value: 0, comment: '', expenseDate: newDate, inputDate: newDate};
         }
         newData['budgets'][budget][monthlyExpenseKey][key]['value'] = value;
         newData['budgets'][budget][monthlyExpenseKey][key]['comment'] = comment;
+        newData['budgets'][budget][monthlyExpenseKey][key]['expenseDate'] = expenseDate;
+        newData['budgets'][budget][monthlyExpenseKey][key]['inputDate'] = inputDate;
       }
       else if (type === 'One-time') {
         if(newData['budgets'][budget][addExpenseKey] === undefined) {
           newData['budgets'][budget][addExpenseKey] = {};
         }
         if(newData['budgets'][budget][addExpenseKey][key] === undefined) {
-          newData['budgets'][budget][addExpenseKey][key] = {value: 0, comment: ''};
+          newData['budgets'][budget][addExpenseKey][key] = {value: 0, comment: '', expenseDate: newDate, inputDate: newDate};
         }
         newData['budgets'][budget][addExpenseKey][key]['value'] = value;
         newData['budgets'][budget][addExpenseKey][key]['comment'] = comment;
+        newData['budgets'][budget][addExpenseKey][key]['expenseDate'] = expenseDate;
+        newData['budgets'][budget][addExpenseKey][key]['inputDate'] = inputDate;
       } 
       setTabs(newData['budgets']);
       if (userData['email'] !== 'Guest') updateUserByEmail(newData);
@@ -319,14 +324,18 @@ function App() {
         newData.budgets.forEach((budget) => {
           if (newData.budgets[budget.eventKey][monthlyExpenseKey]) {
             Object.keys(newData.budgets[budget.eventKey][monthlyExpenseKey]).forEach((key) => {
-              historyData.history[year][month][monthlyExpenseKey][key] =
-                newData.budgets[budget.eventKey][monthlyExpenseKey][key].value;
+              historyData.history[year][month][monthlyExpenseKey][key] = {};
+              historyData.history[year][month][monthlyExpenseKey][key]['value'] = newData.budgets[budget.eventKey][monthlyExpenseKey][key].value;
+              historyData.history[year][month][monthlyExpenseKey][key]['expenseDate'] = newData.budgets[budget.eventKey][monthlyExpenseKey][key].expenseDate;
+              historyData.history[year][month][monthlyExpenseKey][key]['inputDate'] = newData.budgets[budget.eventKey][monthlyExpenseKey][key].inputDate;
             });
           }
           if (newData.budgets[budget.eventKey][addExpenseKey]) {
             Object.keys(newData.budgets[budget.eventKey][addExpenseKey]).forEach((key) => {
-              historyData.history[year][month][addExpenseKey][key] =
-                newData.budgets[budget.eventKey][addExpenseKey][key].value;
+              historyData.history[year][month][addExpenseKey][key] = {};
+              historyData.history[year][month][addExpenseKey][key]['value'] = newData.budgets[budget.eventKey][addExpenseKey][key].value;
+              historyData.history[year][month][addExpenseKey][key]['expenseDate'] = newData.budgets[budget.eventKey][addExpenseKey][key].expenseDate;
+              historyData.history[year][month][addExpenseKey][key]['inputDate'] = newData.budgets[budget.eventKey][addExpenseKey][key].inputDate;
             });
           }
         });

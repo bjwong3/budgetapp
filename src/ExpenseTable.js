@@ -62,6 +62,8 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
   const [editKey, setEditKey] = useState(null);
   const [editValue, setEditValue] = useState(0);
   const [editComment, setEditComment] = useState('');
+  const [editExpenseDate, setEditExpenseDate] = useState(new Date().toISOString().split("T")[0]);
+  const [editInputDate, setEditInputDate] = useState(new Date().toISOString().split("T")[0]);
   const [showModal, setShowModal] = useState(false);  // Modal state
 
   useEffect(() => {
@@ -71,6 +73,8 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
         key,
         value: activeBudget.monthlyExpense[key]?.value || 0,
         comment: activeBudget.monthlyExpense[key]?.comment || '',
+        expenseDate: activeBudget.monthlyExpense[key]?.expenseDate || new Date().toISOString().split("T")[0],
+        inputDate: activeBudget.monthlyExpense[key]?.inputDate || new Date().toISOString().split("T")[0],
       }));
       setExpenses(monthly);
     }
@@ -80,6 +84,8 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
         key,
         value: activeBudget.addExpense[key]?.value || 0,
         comment: activeBudget.addExpense[key]?.comment || '',
+        expenseDate: activeBudget.addExpense[key]?.expenseDate || new Date().toISOString().split("T")[0],
+        inputDate: activeBudget.addExpense[key]?.inputDate || new Date().toISOString().split("T")[0],
       }));
       setExpenses(oneTime);
     }
@@ -93,17 +99,19 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
     saveUpdatedOrder(updatedExpenses, type);
   };
 
-  const handleEditClick = (index, key, value, comment) => {
+  const handleEditClick = (index, key, value, comment, expenseDate, inputDate) => {
     setEditRow(index);
     setEditKey(key);
     setEditValue(value);
     setEditComment(comment);
+    setEditExpenseDate(expenseDate || new Date().toISOString().split("T")[0]);
+    setEditInputDate(inputDate || new Date().toISOString().split("T")[0]);
     setShowModal(true);  // Show modal
   };
 
   const handleSaveClick = () => {
-    edit(editKey, parseFloat(editValue), type, editComment, activeKey);
-    setShowModal(false);  // Hide modal
+    edit(editKey, parseFloat(editValue), type, editComment, editExpenseDate, editInputDate, activeKey);
+    setShowModal(false);
     setEditRow(null);
   };
 
@@ -117,7 +125,12 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
 
     if (type === 'Monthly') {
       const monthlyExpense = updatedExpenses.reduce((acc, item) => {
-        acc[item.key] = { value: item.value, comment: item.comment };
+        acc[item.key] = {
+          value: item.value,
+          comment: item.comment,
+          expenseDate: item.expenseDate, // Preserve expense date
+          inputDate: item.inputDate,     // Preserve input date
+        };
         return acc;
       }, {});
       updatedUserData.budgets[activeKey] = {
@@ -126,7 +139,12 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
       };
     } else if (type === 'One-time') {
       const addExpense = updatedExpenses.reduce((acc, item) => {
-        acc[item.key] = { value: item.value, comment: item.comment };
+        acc[item.key] = {
+          value: item.value,
+          comment: item.comment,
+          expenseDate: item.expenseDate, // Preserve expense date
+          inputDate: item.inputDate,     // Preserve input date
+        };
         return acc;
       }, {});
       updatedUserData.budgets[activeKey] = {
@@ -149,6 +167,8 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
               <th>Name</th>
               <th>Amount</th>
               <th>Comment</th>
+              <th>Expense Date</th>
+              <th>Input Date</th>
               <th style={{ textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
@@ -163,11 +183,15 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
                 <td>{item.key}</td>
                 <td>{item.value}</td>
                 <td>{item.comment}</td>
+                <td>{item.expenseDate}</td>
+                <td>{item.inputDate}</td>
                 <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                   <div className="d-flex justify-content-center">
                     <button
                       className="btn btn-primary btn-sm"
-                      onClick={() => handleEditClick(index, item.key, item.value, item.comment)}
+                      onClick={() =>
+                        handleEditClick(index, item.key, item.value, item.comment, item.expenseDate, item.inputDate)
+                      }
                     >
                       Edit
                     </button>
@@ -216,6 +240,24 @@ const ExpenseTable = ({ type, userData, activeKey, edit, remove, updateUser }) =
               className="form-control"
               value={editComment}
               onChange={(e) => setEditComment(e.target.value)}
+            />
+          </div>
+          <div className="mt-3">
+            <label>Expense Date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={editExpenseDate}
+              onChange={(e) => setEditExpenseDate(e.target.value)}
+            />
+          </div>
+          <div className="mt-3">
+            <label>Input Date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={editInputDate}
+              onChange={(e) => setEditInputDate(e.target.value)}
             />
           </div>
         </Modal.Body>
