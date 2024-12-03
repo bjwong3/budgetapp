@@ -10,7 +10,7 @@ const DataDisplay = ({ data, updateData, activeKey, addToExpenseMap, incomeKey})
   // Update user data income
   const updateIncome = () => {
     if (incomeValue !== '' && incomeValue !== undefined && !isNaN(incomeValue)) {
-      updateData(incomeKey, parseFloat(incomeValue), activeKey);
+      updateData(incomeKey, incomeValue, activeKey);
       setIncomeValue('');
     }
   };

@@ -66,7 +66,7 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey,
     } catch (e) {
       parsedValue = incomeValue;
     }
-    updateData(incomeKey, incomeValue, activeKey)
+    updateData(incomeKey, parseFloat(incomeValue), activeKey)
     setOriginalIncome(0);
     setEditingIncome(false);
   };
