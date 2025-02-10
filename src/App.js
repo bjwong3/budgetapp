@@ -112,24 +112,30 @@ function App() {
 
   const handleAddBudget = () => {
     if (!newBudgetName) return; // Prevent adding if no name is entered
-
-    const newTabKey = extraTabs.length; // Generate a unique key for the new tab
+  
+    const newTabKey = userData.budgets.length; // Ensure a unique key based on the current length
     const newTab = {
       eventKey: newTabKey,
-      title: newBudgetName || `New Budget ${newTabKey}`, // Use the new budget name entered by the user
+      title: newBudgetName, // Use the entered budget name
       income: 0,
       monthlyExpense: {},
       addExpense: {}
     };
-
-    const newData = { ...userData };
-    newData['budgets'].push(newTab);
+  
+    const newData = { 
+      ...userData, 
+      budgets: [...userData.budgets, newTab] // Append the new tab correctly
+    };
+  
     setUserData(newData);
-    setTabs([...extraTabs, newTab]); // Add the new tab to the list of tabs
-    setActiveKey(newTabKey); // Automatically switch to the newly added tab
-    setNewBudgetName(''); // Reset the budget name field
+    setTabs(newData.budgets); // Update extraTabs state correctly
+    setActiveKey(newTabKey); // Switch to the newly added tab
+    setNewBudgetName(''); // Reset input
     setShowModal(false); // Close the modal
-    if (userData['email'] !== 'Guest') updateUserByEmail(newData);
+  
+    if (userData.email !== 'Guest') {
+      updateUserByEmail(newData); // Only update backend for registered users
+    }
   };
 
   // Function to remove a budget
