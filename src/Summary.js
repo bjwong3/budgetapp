@@ -137,8 +137,6 @@ const Summary = ({data, updateData, incomeKey, monthlyExpenseKey, addExpenseKey,
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
-        {/* <h3>Monthly Expenses: ${sumMonthlyExpenses().toFixed(2)}</h3>
-        <h3>Other Expenses: ${sumOtherExpenses().toFixed(2)}</h3> */}
         <div className="mb-2">
           <Alert key='leftover' variant={`${getHeaderClass()}`} className="mb-0 d-flex align-items-center p-3">
             <h4 className="mb-0" style={{ width: '100%' }}>Leftover Money: ${calculateNetValue().toFixed(2)}</h4>
