@@ -82,7 +82,7 @@ function App() {
   // Function to update history data by email
   const updateHistoryByEmail = async (data) => {
     try {
-      const response = await axios.put(`https://budgetapp-server.vercel.app/api/history/${user}`, data);
+      await axios.put(`https://budgetapp-server.vercel.app/api/history/${user}`, data);
     } catch (error) {
       console.error('Error updating history:', error);
     }
