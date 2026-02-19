@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Tab, Tabs, Modal, Form } from 'react-bootstrap';
+import { Container, Row, Col, Button, Tab, Tabs, Modal, Form, Card } from 'react-bootstrap';
 import DataDisplay from './DataDisplay';
 import Summary from './Summary';
 import ExpenseTable from './ExpenseTable';
@@ -516,20 +516,38 @@ function App() {
           </>
         ) : (
           <>
-            <Row className="justify-content-center">
-              <Col md={6} className="text-center">
-                <h2>Login</h2>
-                <div className="d-flex justify-content-center">
-                  <GoogleLogin
-                    onSuccess={handleGoogleLoginSuccess}
-                    onError={handleGoogleLoginError}
-                  />
-                </div>
-                <Button onClick={handleGuestSignIn} variant="secondary" className="mt-3">
-                  Sign In Without Account
-                </Button>
-              </Col>
-            </Row>
+              <Row className="justify-content-center align-items-center" style={{ minHeight: '55vh' }}>
+                <Col md={8} lg={5}>
+                  <div className="d-flex justify-content-center">
+                    <Card className="shadow-sm w-100">
+                      <Card.Body className="p-4">
+                        <div className="text-center mb-3">
+                          <h2 className="mb-1">BudgetApp</h2>
+                          <p className="text-muted mb-2">Organize your monthly and one-time expenses</p>
+                        </div>
+
+                        <div className="d-flex justify-content-center mb-3">
+                          <GoogleLogin
+                            onSuccess={handleGoogleLoginSuccess}
+                            onError={handleGoogleLoginError}
+                          />
+                        </div>
+
+                        <div className="text-center mb-3">
+                          <small className="text-muted">Sign in with Google to sync your budgets across devices.</small>
+                        </div>
+
+                        <div className="d-grid gap-2">
+                          <Button variant="outline-secondary" size="lg" onClick={handleGuestSignIn}>
+                            Continue as Guest
+                          </Button>
+                        </div>
+
+                      </Card.Body>
+                    </Card>
+                  </div>
+                </Col>
+              </Row>
           </>
         )}
       </Container>
