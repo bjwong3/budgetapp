@@ -12,7 +12,7 @@ History Tab: Expenses gets tracked at the end of every month and moved to the hi
 Responsive Design: Built with Bootstrap for mobile-friendly use.
 
 ## Tech Stack
-Frontend (Hosted on Vercel): React, Bootstrap\
-Backend (Hosted on Vercel)(Separate Repo): Node.js, Express.js\
-Database: MongoDB Atlas (cloud-hosted)\
+Frontend: React, Bootstrap, AWS S3\
+Backend: AWS Lambda\
+Database: DynamoDB (cloud-hosted)\
 API: RESTful API to communicate between frontend and backend
