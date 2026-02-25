@@ -41,7 +41,7 @@ function App() {
   // Function to fetch user data by email
   const fetchUserByEmail = async (email) => {
     try {
-      const response = await axios.get(`https://budgetapp-server.vercel.app/api/users/${email}`);
+      const response = await axios.get(`https://8kt7krhte4.execute-api.us-east-2.amazonaws.com/prod/api/users/${email}`);
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -56,7 +56,7 @@ function App() {
   // Function to fetch history data by email
   const fetchHistoryByEmail = async () => {
     try {
-      const response = await axios.get(`https://budgetapp-server.vercel.app/api/history/${user}`);
+      const response = await axios.get(`https://8kt7krhte4.execute-api.us-east-2.amazonaws.com/prod/api/history/${user}`);
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -71,7 +71,7 @@ function App() {
   // Function to update user data by email
   const updateUserByEmail = async (data) => {
     try {
-      const response = await axios.put(`https://budgetapp-server.vercel.app/api/users/${user}`, data);
+      const response = await axios.put(`https://8kt7krhte4.execute-api.us-east-2.amazonaws.com/prod/api/users/${user}`, data);
       setUserData(response.data); // Update state with new user data
       setTabs(response.data['budgets']);
     } catch (error) {
@@ -82,27 +82,9 @@ function App() {
   // Function to update history data by email
   const updateHistoryByEmail = async (data) => {
     try {
-      await axios.put(`https://budgetapp-server.vercel.app/api/history/${user}`, data);
+      await axios.put(`https://8kt7krhte4.execute-api.us-east-2.amazonaws.com/prod/api/history/${user}`, data);
     } catch (error) {
       console.error('Error updating history:', error);
-    }
-  };
-
-  // Function to create a new user
-  const createNewUser = async (data) => {
-    try {
-      await axios.post(`https://budgetapp-server.vercel.app/api/users`, data);
-    } catch (error) {
-      console.error('Error adding user:', error);
-    }
-  };
-
-  // Function to create a new history
-  const createNewHistory = async (data) => {
-    try {
-      await axios.post(`https://budgetapp-server.vercel.app/api/history`, data);
-    } catch (error) {
-      console.error('Error adding history:', error);
     }
   };
 
@@ -235,8 +217,8 @@ function App() {
         email: email,
         history: {}
       };
-      await createNewUser(newData);
-      await createNewHistory(newHistory);
+      await updateUserByEmail(newData)
+      await updateHistoryByEmail(newHistory)
       setUserData(newData);
       setTabs(newData['budgets']);
     }
